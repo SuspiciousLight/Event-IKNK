@@ -14,6 +14,7 @@ import { RemindersModule } from './modules/reminders/reminders.module';
 import { ConsentsModule } from './modules/consents/consents.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AuditModule } from './modules/audit/audit.module';
     ConsentsModule,
     AdminModule,
     AuditModule,
+    HealthModule,
   ],
   providers: [
     RateLimitService,
