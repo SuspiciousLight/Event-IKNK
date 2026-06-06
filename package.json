@@ -1,0 +1,39 @@
+{
+  "name": "diplom-vk-events",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.0.0",
+  "dependencies": {
+    "@prisma/client": "6.0.0"
+  },
+  "scripts": {
+    "dev": "corepack pnpm --filter frontend dev",
+    "dev:all": "corepack pnpm -r --parallel dev",
+    "build": "corepack pnpm --filter @diplom/shared build && corepack pnpm --filter frontend build",
+    "build:all": "corepack pnpm -r build",
+    "preview": "corepack pnpm --filter frontend preview",
+    "tunnel:cf": "cloudflared tunnel --url http://localhost:4173",
+    "tunnel:cf:dev": "cloudflared tunnel --url http://localhost:5173",
+    "tunnel:lt": "npx localtunnel --port 4173",
+    "tunnel:lt:dev": "npx localtunnel --port 5173",
+    "demo": "corepack pnpm run build && corepack pnpm run preview",
+    "test": "corepack pnpm -r test",
+    "typecheck": "corepack pnpm -r typecheck",
+    "tunnel:pinggy": "ssh -p 443 -R 0:localhost:4173 a.pinggy.io",
+    "tunnel:pinggy:dev": "ssh -p 443 -R 0:localhost:5173 a.pinggy.io"
+  },
+  "devDependencies": {
+    "@prisma/debug": "6.0.0",
+    "prisma": "6.0.0",
+    "typescript": "^5.6.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  }
+}

@@ -1,0 +1,447 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  DEACTIVATED
+  BLOCKED
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum FormStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuestionType {
+  TEXT
+  TEXTAREA
+  PHONE
+  EMAIL
+  SELECT
+  CHECKBOX
+  COURSE
+  DATE
+  NUMBER
+}
+
+enum RegistrationStatus {
+  ACTIVE
+  CANCELED
+}
+
+enum ConsentType {
+  PERSONAL_DATA_PROCESSING
+}
+
+enum ReminderStatus {
+  SCHEDULED
+  SENT
+  CANCELED
+  FAILED
+}
+
+enum CampaignStatus {
+  DRAFT
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum RecipientStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum NotificationChannel {
+  IN_APP
+}
+
+enum SeatWaitlistStatus {
+  ACTIVE
+  CANCELED
+  NOTIFIED
+}
+
+model User {
+  id            String       @id @default(uuid()) @db.Uuid
+  role          Role         @default(USER)
+  status        UserStatus   @default(ACTIVE)
+  vkUserId      String?      @unique @db.VarChar(32)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  profile                UserProfile?
+  admin                  Admin?
+  registrations          EventRegistration[]   @relation("RegistrationOwner")
+  canceledRegistrations  EventRegistration[]   @relation("RegistrationCanceledBy")
+  consents               Consent[]             @relation("ConsentUser")
+  reminders              Reminder[]            @relation("ReminderUser")
+  seatWaitlistSubscriptions SeatWaitlistSubscription[] @relation("SeatWaitlistUser")
+  notificationRecipients NotificationRecipient[] @relation("RecipientUser")
+  auditLogs              AuditLog[]            @relation("AuditActor")
+
+  @@index([role, status])
+  @@index([deletedAt])
+}
+
+model UserProfile {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @unique @db.Uuid
+  fullName      String    @db.VarChar(255)
+  telegramUsername String? @db.VarChar(64)
+  disclaimerAccepted Boolean @default(false)
+  disclaimerAcceptedAt DateTime?
+  disclaimerVersion String? @db.VarChar(32)
+  isActive      Boolean   @default(true)
+  deactivatedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  registrations EventRegistration[]
+
+  @@index([isActive])
+  @@index([telegramUsername])
+  @@index([deletedAt])
+}
+
+model Admin {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @unique @db.Uuid
+  login            String    @unique @db.VarChar(255)
+  passwordHash     String    @db.VarChar(255)
+  isActive         Boolean   @default(true)
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  eventsCreated    Event[]              @relation("EventCreatedBy")
+  templatesCreated FormTemplate[]       @relation("TemplateCreatedBy")
+  formsCreated     RegistrationForm[]   @relation("FormCreatedBy")
+  campaignsCreated NotificationCampaign[] @relation("CampaignCreatedBy")
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model Event {
+  id               String      @id @default(uuid()) @db.Uuid
+  title            String      @db.VarChar(255)
+  description      String?     @db.VarChar(2000)
+  startAt          DateTime
+  endAt            DateTime
+  location         String?     @db.VarChar(255)
+  capacity         Int?
+  status           EventStatus @default(DRAFT)
+  createdByAdminId String?     @db.Uuid
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  createdByAdmin   Admin?      @relation("EventCreatedBy", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  forms            RegistrationForm[]
+  registrations    EventRegistration[]
+  reminders        Reminder[]
+  campaigns        NotificationCampaign[]
+  consents         Consent[]
+  seatWaitlistSubscriptions SeatWaitlistSubscription[] @relation("SeatWaitlistEvent")
+
+  @@index([status, startAt])
+  @@index([deletedAt])
+}
+
+model SeatWaitlistSubscription {
+  id           String             @id @default(uuid()) @db.Uuid
+  eventId      String             @db.Uuid
+  userId       String             @db.Uuid
+  status       SeatWaitlistStatus @default(ACTIVE)
+  activeMarker Int?               @default(1)
+  notifiedAt   DateTime?
+  canceledAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  deletedAt    DateTime?
+
+  event        Event              @relation("SeatWaitlistEvent", fields: [eventId], references: [id], onDelete: Restrict)
+  user         User               @relation("SeatWaitlistUser", fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([eventId, userId, activeMarker], map: "uq_event_user_active_waitlist")
+  @@index([eventId, status, createdAt])
+  @@index([userId, status])
+  @@index([deletedAt])
+}
+
+model RegistrationForm {
+  id               String     @id @default(uuid()) @db.Uuid
+  eventId          String     @db.Uuid
+  version          Int
+  status           FormStatus @default(DRAFT)
+  sourceTemplateId String?    @db.Uuid
+  createdByAdminId String?    @db.Uuid
+  publishedAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  event            Event      @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  sourceTemplate   FormTemplate? @relation(fields: [sourceTemplateId], references: [id], onDelete: SetNull)
+  createdByAdmin   Admin?     @relation("FormCreatedBy", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  questions        FormQuestion[]
+  registrations    EventRegistration[]
+
+  @@unique([eventId, version])
+  @@index([eventId, status])
+  @@index([deletedAt])
+}
+
+model FormQuestion {
+  id              String       @id @default(uuid()) @db.Uuid
+  formId          String       @db.Uuid
+  position        Int
+  fieldKey        String       @db.VarChar(100)
+  label           String       @db.VarChar(255)
+  questionType    QuestionType
+  isRequired      Boolean      @default(true)
+  placeholder     String?      @db.VarChar(255)
+  options         Json?
+  validationRules Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  form            RegistrationForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  answers         RegistrationAnswer[]
+
+  @@unique([formId, position])
+  @@unique([formId, fieldKey])
+  @@index([formId])
+}
+
+model FormTemplate {
+  id               String    @id @default(uuid()) @db.Uuid
+  templateCode     String    @db.VarChar(100)
+  version          Int
+  name             String    @db.VarChar(255)
+  description      String?   @db.VarChar(1000)
+  createdByAdminId String?   @db.Uuid
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  createdByAdmin   Admin?    @relation("TemplateCreatedBy", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  questions        TemplateQuestion[]
+  registrationForms RegistrationForm[]
+
+  @@unique([templateCode, version])
+  @@index([isActive, deletedAt])
+}
+
+model TemplateQuestion {
+  id              String       @id @default(uuid()) @db.Uuid
+  templateId      String       @db.Uuid
+  position        Int
+  fieldKey        String       @db.VarChar(100)
+  label           String       @db.VarChar(255)
+  questionType    QuestionType
+  isRequired      Boolean      @default(true)
+  placeholder     String?      @db.VarChar(255)
+  options         Json?
+  validationRules Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  template        FormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, position])
+  @@unique([templateId, fieldKey])
+  @@index([templateId])
+}
+
+model EventRegistration {
+  id                  String             @id @default(uuid()) @db.Uuid
+  eventId             String             @db.Uuid
+  userId              String             @db.Uuid
+  userProfileId       String             @db.Uuid
+  registrationFormId  String?            @db.Uuid
+  status              RegistrationStatus @default(ACTIVE)
+  activeMarker        Int?               @default(1)
+  registeredAt        DateTime           @default(now())
+  canceledAt          DateTime?
+  canceledByUserId    String?            @db.Uuid
+  cancelReason        String?            @db.VarChar(500)
+  deletedAt           DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  event               Event              @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  user                User               @relation("RegistrationOwner", fields: [userId], references: [id], onDelete: Restrict)
+  userProfile         UserProfile        @relation(fields: [userProfileId], references: [id], onDelete: Restrict)
+  registrationForm    RegistrationForm?  @relation(fields: [registrationFormId], references: [id], onDelete: Restrict)
+  canceledByUser      User?              @relation("RegistrationCanceledBy", fields: [canceledByUserId], references: [id], onDelete: SetNull)
+
+  answers             RegistrationAnswer[]
+  reminders           Reminder[]
+  notificationRecipients NotificationRecipient[]
+  consent             Consent?
+
+  @@unique([eventId, userId, activeMarker], map: "uq_event_user_active_registration")
+  @@index([eventId, status])
+  @@index([userId, status])
+  @@index([registrationFormId])
+  @@index([deletedAt])
+}
+
+model RegistrationAnswer {
+  id                  String    @id @default(uuid()) @db.Uuid
+  eventRegistrationId String    @db.Uuid
+  formQuestionId      String?   @db.Uuid
+  questionKey         String    @db.VarChar(100)
+  questionLabel       String    @db.VarChar(255)
+  answerText          String?   @db.VarChar(4000)
+  answerJson          Json?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  eventRegistration   EventRegistration @relation(fields: [eventRegistrationId], references: [id], onDelete: Cascade)
+  formQuestion        FormQuestion?     @relation(fields: [formQuestionId], references: [id], onDelete: SetNull)
+
+  @@unique([eventRegistrationId, questionKey])
+  @@index([eventRegistrationId])
+  @@index([formQuestionId])
+}
+
+model Consent {
+  id                  String      @id @default(uuid()) @db.Uuid
+  userId              String      @db.Uuid
+  eventId             String?     @db.Uuid
+  eventRegistrationId String?     @unique @db.Uuid
+  consentType         ConsentType @default(PERSONAL_DATA_PROCESSING)
+  consentVersion      String      @db.VarChar(64)
+  consentTextHash     String      @db.VarChar(128)
+  contextKey          String      @db.VarChar(64)
+  acceptedAt          DateTime    @default(now())
+  createdAt           DateTime    @default(now())
+
+  user                User        @relation("ConsentUser", fields: [userId], references: [id], onDelete: Restrict)
+  event               Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  eventRegistration   EventRegistration? @relation(fields: [eventRegistrationId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, consentType, consentVersion, contextKey])
+  @@index([eventId])
+  @@index([acceptedAt])
+}
+
+model Reminder {
+  id                  String              @id @default(uuid()) @db.Uuid
+  userId              String              @db.Uuid
+  eventId             String              @db.Uuid
+  eventRegistrationId String?             @db.Uuid
+  remindAt            DateTime
+  status              ReminderStatus      @default(SCHEDULED)
+  channel             NotificationChannel @default(IN_APP)
+  sentAt              DateTime?
+  canceledAt          DateTime?
+  errorMessage        String?             @db.VarChar(1000)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  deletedAt           DateTime?
+
+  user                User                @relation("ReminderUser", fields: [userId], references: [id], onDelete: Restrict)
+  event               Event               @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  eventRegistration   EventRegistration?  @relation(fields: [eventRegistrationId], references: [id], onDelete: SetNull)
+
+  @@index([status, remindAt])
+  @@index([userId, status])
+  @@index([eventId, status])
+  @@index([deletedAt])
+}
+
+model NotificationCampaign {
+  id               String         @id @default(uuid()) @db.Uuid
+  eventId          String?        @db.Uuid
+  createdByAdminId String?        @db.Uuid
+  title            String         @db.VarChar(255)
+  message          String         @db.VarChar(4000)
+  status           CampaignStatus @default(DRAFT)
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  totalRecipients  Int            @default(0)
+  sentCount        Int            @default(0)
+  failedCount      Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+
+  event            Event?         @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  createdByAdmin   Admin?         @relation("CampaignCreatedBy", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  recipients       NotificationRecipient[]
+
+  @@index([status, scheduledAt])
+  @@index([eventId, status])
+  @@index([deletedAt])
+}
+
+model NotificationRecipient {
+  id                  String              @id @default(uuid()) @db.Uuid
+  campaignId          String              @db.Uuid
+  userId              String              @db.Uuid
+  eventRegistrationId String?             @db.Uuid
+  channel             NotificationChannel @default(IN_APP)
+  status              RecipientStatus     @default(PENDING)
+  sentAt              DateTime?
+  errorMessage        String?             @db.VarChar(1000)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  campaign            NotificationCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user                User                 @relation("RecipientUser", fields: [userId], references: [id], onDelete: Restrict)
+  eventRegistration   EventRegistration?   @relation(fields: [eventRegistrationId], references: [id], onDelete: SetNull)
+
+  @@unique([campaignId, userId])
+  @@index([status, createdAt])
+  @@index([userId, status])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  actorRole  Role?
+  action     String   @db.VarChar(100)
+  targetType String   @db.VarChar(100) @map("target_type")
+  targetId   String?  @db.VarChar(100) @map("target_id")
+  metadata   Json?
+  ipAddress  String?  @db.VarChar(64)
+  userAgent  String?  @db.VarChar(512)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+}

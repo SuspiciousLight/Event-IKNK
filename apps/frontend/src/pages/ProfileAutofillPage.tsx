@@ -1,0 +1,136 @@
+import { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Card, Div, FormItem, Group, Input, Text, Title } from '@vkontakte/vkui';
+import { PageHero, StateBlock, StatusBadge, InfoRow } from '../components/common/Ui';
+import { useAppSnackbar } from '../hooks/useAppSnackbar';
+import { useProfileAutofill } from '../hooks/useProfileAutofill';
+import { formatDateTime } from '../utils/format';
+
+const getInitials = (firstName?: string, lastName?: string) => {
+  const first = firstName?.trim().charAt(0) ?? '';
+  const last = lastName?.trim().charAt(0) ?? '';
+  return `${last}${first}`.trim().toUpperCase() || 'ST';
+};
+
+export const ProfileAutofillPage = () => {
+  const navigate = useNavigate();
+  const { snackbar, showError, showSuccess } = useAppSnackbar();
+  const profile = useProfileAutofill();
+
+  const submit = async (event: FormEvent) => {
+    const ok = await profile.submit(event);
+    if (ok) {
+      showSuccess('Профиль сохранён.');
+    } else {
+      showError('Не получилось сохранить профиль. Проверьте поля и попробуйте снова.');
+    }
+  };
+
+  return (
+    <Group className="page-section" mode="plain">
+      <PageHero
+        eyebrow="Личный кабинет"
+        title="Профиль автозаполнения"
+        subtitle="Идентификатор VK определяется автоматически на сервере. В профиле студент вводит только фамилию, имя и Telegram username для связи."
+        action={<Button mode="secondary" onClick={() => navigate('/consent')}>Согласие на ПД</Button>}
+      />
+
+      <StateBlock loading={profile.loading} error={profile.error}>
+        <div className="grid-stack">
+          <Card mode="shadow" className="profile-card">
+            <Div className="grid-stack">
+              <div className="profile-identity">
+                <div className="profile-avatar" aria-hidden="true">
+                  {getInitials(profile.profile.firstName, profile.profile.lastName)}
+                </div>
+                <div>
+                  <Text className="eyebrow">Данные студента</Text>
+                  <Title level="3">{profile.hasProfile ? 'Профиль заполнен' : 'Профиль ещё не заполнен'}</Title>
+                  <Text className="muted-text">
+                    {profile.hasProfile
+                      ? 'Можно записываться быстрее: данные уже готовы.'
+                      : 'Заполните поля ниже, чтобы регистрация не останавливалась на последнем шаге.'}
+                  </Text>
+                </div>
+                <StatusBadge tone={profile.completion === 100 ? 'success' : 'warning'}>{profile.completion}%</StatusBadge>
+              </div>
+
+              {profile.savedProfile && (
+                <div className="profile-summary">
+                  <div className="meta-tile"><InfoRow label="ФИ" value={profile.savedProfile.fullName} /></div>
+                  <div className="meta-tile"><InfoRow label="Telegram" value={profile.savedProfile.telegramUsername ?? 'Не указан'} /></div>
+                  <div className="meta-tile"><InfoRow label="Обновлено" value={formatDateTime(profile.savedProfile.updatedAt)} /></div>
+                </div>
+              )}
+
+            </Div>
+          </Card>
+
+          <Card mode="shadow" className="profile-card">
+            <Div>
+              <form onSubmit={submit} className="admin-form-grid">
+                <div className="admin-form-columns">
+                  <FormItem top="Фамилия">
+                    <Input value={profile.profile.lastName} onChange={(event) => profile.updateField('lastName', event.target.value)} placeholder="Иванов" required />
+                  </FormItem>
+                  <FormItem top="Имя">
+                    <Input value={profile.profile.firstName} onChange={(event) => profile.updateField('firstName', event.target.value)} placeholder="Иван" required />
+                  </FormItem>
+                </div>
+
+                <FormItem top="Telegram username" bottom="Формат: @username, без номера телефона">
+                  <Input
+                    value={profile.profile.telegramUsername}
+                    onChange={(event) => profile.updateField('telegramUsername', event.target.value)}
+                    placeholder="@student_2026"
+                    required
+                  />
+                </FormItem>
+
+                <Card mode="shadow" className="soft-card">
+                  <Div className="grid-stack">
+                    <div>
+                      <Text className="eyebrow">Дисклеймер профиля</Text>
+                      <Title level="3">{profile.disclaimer?.title ?? 'Как используются данные'}</Title>
+                    </div>
+                    <Text className="muted-text" style={{ whiteSpace: 'pre-line' }}>
+                      {profile.disclaimer?.text ?? 'Данные используются только для регистрации на мероприятия и организационной связи.'}
+                    </Text>
+                    {profile.requiresDisclaimer ? (
+                      <div className="form-action-row">
+                        <Button
+                          type="button"
+                          mode={profile.disclaimerAcknowledged ? 'primary' : 'secondary'}
+                          onClick={() => profile.setDisclaimerAcknowledged(true)}
+                        >
+                          Ознакомлен
+                        </Button>
+                        <StatusBadge tone={profile.disclaimerAcknowledged ? 'success' : 'warning'}>
+                          {profile.disclaimerAcknowledged ? 'Подтверждено' : 'Нужно подтвердить'}
+                        </StatusBadge>
+                      </div>
+                    ) : (
+                      <StatusBadge tone="success">Дисклеймер уже подтверждён</StatusBadge>
+                    )}
+                  </Div>
+                </Card>
+
+                <div className="form-action-row">
+                  <Button size="l" type="submit" loading={profile.saving} disabled={profile.requiresDisclaimer && !profile.disclaimerAcknowledged}>
+                    {profile.hasProfile ? 'Обновить профиль' : 'Создать профиль'}
+                  </Button>
+                  <Button type="button" mode="secondary" size="l" onClick={() => navigate('/events')}>
+                    К мероприятиям
+                  </Button>
+                </div>
+              </form>
+              {profile.saveError && <Text className="status-badge status-badge-danger">{profile.saveError}</Text>}
+              {profile.success && <Text className="status-badge status-badge-success">{profile.success}</Text>}
+            </Div>
+          </Card>
+        </div>
+      </StateBlock>
+      {snackbar}
+    </Group>
+  );
+};

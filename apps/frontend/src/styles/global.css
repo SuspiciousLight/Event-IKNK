@@ -1,0 +1,891 @@
+﻿:root {
+  /* Brand palette (no green): Electric Indigo, Lavender, White, Deep Gray. */
+  --app-bg: #0c0a14;
+  --app-bg-soft: #141019;
+  --app-bg-elevated: #1b1626;
+  --app-card: rgba(27, 22, 40, 0.92);
+  --app-card-solid: #1b1626;
+  --app-card-strong: #251d38;
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-border-strong: rgba(204, 170, 255, 0.18);
+  --app-ink: #f5f2ff;
+  --app-muted: #9c94b8;
+  --app-muted-strong: #cdc4e6;
+  --app-accent: #6633ff;
+  --app-accent-strong: #8a66ff;
+  --app-accent-soft: rgba(102, 51, 255, 0.16);
+  --app-success: #44ff22;
+  --app-success-soft: rgba(68, 255, 34, 0.16);
+  --app-warn: #ffcc66;
+  --app-warn-soft: rgba(255, 204, 102, 0.15);
+  --app-danger: #ff6b7a;
+  --app-danger-soft: rgba(255, 107, 122, 0.14);
+  --app-purple: #ccaaff;
+  --app-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+  --app-radius: 24px;
+  --app-radius-sm: 16px;
+  --app-shell-width: 430px;
+  --app-admin-width: 1120px;
+}
+
+/* Retint VKUI's built-in accent (checkboxes, switches, spinner, active states)
+   from default blue to the brand Electric Indigo. */
+.vkuiAppRoot,
+.vkuiRoot {
+  --vkui--color_background_accent: #6633ff;
+  --vkui--color_background_accent_themed: #6633ff;
+  --vkui--color_background_accent_tint: #8a66ff;
+  --vkui--color_stroke_accent_themed: #6633ff;
+  --vkui--color_text_accent: #8a66ff;
+  --vkui--color_text_accent_themed: #8a66ff;
+  --vkui--color_icon_accent: #8a66ff;
+  --vkui--color_icon_accent_themed: #8a66ff;
+  --vkui--color_stroke_accent: #6633ff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+html {
+  background: #08060f;
+}
+
+body {
+  color: var(--app-ink);
+  background:
+    radial-gradient(circle at 12% -8%, rgba(102, 51, 255, 0.20), transparent 30%),
+    radial-gradient(circle at 92% 8%, rgba(204, 170, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 45% 105%, rgba(102, 51, 255, 0.10), transparent 34%),
+    linear-gradient(180deg, #07050d 0%, #0b0813 100%);
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: "VK Sans Display", "VK Sans", "SF Pro Display", "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--app-accent-strong);
+}
+
+.vkuiRoot,
+.vkuiAppRoot,
+.vkuiSplitLayout,
+.vkuiSplitCol,
+.vkuiView,
+.vkuiPanel,
+.vkuiPanel__in,
+.vkuiGroup,
+.vkuiGroup__inner,
+.vkuiFormItem,
+.vkuiDiv,
+.vkuiPlaceholder {
+  background: transparent !important;
+  color: var(--app-ink);
+}
+
+.vkuiTitle,
+.vkuiHeadline,
+.vkuiText,
+.vkuiSubhead,
+.vkuiParagraph,
+.vkuiFormItem__top,
+.vkuiFormItem__bottom,
+.vkuiCheckbox__content,
+.vkuiSimpleCell__children,
+.vkuiSimpleCell__description {
+  color: inherit;
+}
+
+.vkuiInput,
+.vkuiTextarea,
+.vkuiSelect,
+.vkuiFormField {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: var(--app-border-strong) !important;
+  color: var(--app-ink) !important;
+}
+
+.vkuiInput__el,
+.vkuiTextarea__el,
+.vkuiSelect__el {
+  color: var(--app-ink) !important;
+  /* Guard against vertical clipping of the input text (e.g. tall Cyrillic glyphs). */
+  line-height: 1.4 !important;
+}
+
+.vkuiInput__el::placeholder,
+.vkuiTextarea__el::placeholder {
+  color: rgba(195, 208, 226, 0.52) !important;
+}
+
+.vkuiButton--mode-primary {
+  background: linear-gradient(135deg, #6633ff, #8a66ff) !important;
+  color: white !important;
+  box-shadow: 0 12px 26px rgba(102, 51, 255, 0.26);
+}
+
+.vkuiButton--mode-secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--app-ink) !important;
+  border: 1px solid var(--app-border) !important;
+}
+
+.vkuiButton--mode-outline {
+  border-color: var(--app-border-strong) !important;
+  color: var(--app-ink) !important;
+}
+
+.vkuiButton[disabled] {
+  opacity: 0.55;
+}
+
+.app-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, var(--app-shell-width));
+  min-height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(14, 11, 22, 0.97), rgba(8, 6, 14, 0.99)),
+    var(--app-bg);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: var(--app-shadow);
+}
+
+.app-shell::before {
+  content: "";
+  position: absolute;
+  inset: -140px -90px auto -70px;
+  height: 300px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 35%, rgba(102, 51, 255, 0.16), transparent 38%),
+    radial-gradient(circle at 76% 18%, rgba(204, 170, 255, 0.13), transparent 34%);
+  filter: blur(4px);
+}
+
+.app-shell-admin {
+  width: min(100%, var(--app-admin-width));
+}
+
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 16px 10px;
+  background: rgba(8, 11, 18, 0.76);
+  border-bottom: 1px solid var(--app-border);
+  backdrop-filter: blur(22px);
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-brand-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  background:
+    linear-gradient(135deg, rgba(102, 51, 255, 1), rgba(204, 170, 255, 0.92)),
+    #6633ff;
+  box-shadow: 0 14px 30px rgba(102, 51, 255, 0.3);
+}
+
+.app-brand-logo {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  display: block;
+  object-fit: contain;
+}
+
+.app-brand-caption {
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.app-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Bottom padding clears the floating bottom navigation (~80px + 14px offset). */
+  padding: 14px 14px 120px;
+}
+
+.app-nav {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 12;
+  display: grid;
+  /* Always one row, whatever the item count (3 for students, 4 with admin). */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: rgba(12, 18, 29, 0.88);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.app-nav-button {
+  min-height: 48px;
+  padding: 7px 6px;
+  border: 0;
+  border-radius: 18px;
+  color: var(--app-muted);
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.app-nav-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+}
+
+.app-nav-button-active {
+  color: white;
+  background: linear-gradient(135deg, rgba(102, 51, 255, 0.94), rgba(204, 170, 255, 0.85));
+  box-shadow: 0 12px 26px rgba(102, 51, 255, 0.28);
+}
+
+.app-nav-button-active .app-nav-icon {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.page-section {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.app-shell-admin .page-section {
+  max-width: 1080px;
+}
+
+.page-hero {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  margin: 0 0 14px;
+  border: 1px solid var(--app-border);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(102, 51, 255, 0.24), transparent 38%),
+    linear-gradient(145deg, rgba(28, 42, 66, 0.95), rgba(14, 21, 34, 0.92));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
+}
+
+.page-hero-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin-bottom: 7px;
+  color: var(--app-accent-strong);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.page-title {
+  margin: 0;
+  color: var(--app-ink);
+  letter-spacing: -0.03em;
+}
+
+.page-subtitle {
+  margin-top: 8px;
+  color: var(--app-muted);
+  line-height: 1.5;
+}
+
+.catalog-header {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.search-card {
+  padding: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.grid-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.card-grid-modern {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.app-shell-admin .card-grid-modern {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.soft-card,
+.event-card-modern,
+.registration-card,
+.profile-card,
+.admin-card,
+.empty-card {
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  background: var(--app-card);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.event-card-modern {
+  position: relative;
+  min-height: 0;
+  transform: translateZ(0);
+}
+
+.event-cover {
+  position: relative;
+  min-height: 132px;
+  padding: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.18), transparent 18%),
+    radial-gradient(circle at 90% 8%, rgba(255, 255, 255, 0.16), transparent 22%),
+    linear-gradient(135deg, #6633ff 0%, #8a66ff 52%, #ccaaff 100%);
+}
+
+.event-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, rgba(7, 10, 17, 0.62));
+}
+
+.event-cover-title,
+.event-cover-badge {
+  position: relative;
+  z-index: 1;
+}
+
+.event-cover-title {
+  max-width: 260px;
+  color: white;
+  font-size: 22px;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.event-cover-badge {
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.event-card-body {
+  display: grid;
+  gap: 13px;
+  padding: 16px;
+}
+
+.event-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.event-description {
+  color: var(--app-muted);
+  line-height: 1.5;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.app-shell-admin .meta-grid {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.meta-tile {
+  padding: 13px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--app-border);
+}
+
+.info-row {
+  display: grid;
+  gap: 4px;
+}
+
+.info-row .vkuiText:first-child {
+  font-size: 12px;
+}
+
+.inline-actions,
+.event-card-actions,
+.admin-toolbar,
+.admin-tabs,
+.admin-filter-row,
+.form-action-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.event-card-actions {
+  margin-top: 2px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--app-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--app-muted-strong);
+}
+
+.status-badge-success {
+  background: var(--app-success-soft);
+  color: #7dff66;
+  border-color: rgba(68, 255, 34, 0.22);
+}
+
+.status-badge-warning {
+  background: var(--app-warn-soft);
+  color: #ffe09b;
+  border-color: rgba(255, 204, 102, 0.22);
+}
+
+.status-badge-danger {
+  background: var(--app-danger-soft);
+  color: #ff9ca6;
+  border-color: rgba(255, 107, 122, 0.22);
+}
+
+.status-badge-accent {
+  background: var(--app-accent-soft);
+  color: #d6c6ff;
+  border-color: rgba(102, 51, 255, 0.22);
+}
+
+.muted-text {
+  color: var(--app-muted) !important;
+}
+
+.state-shell,
+.center-state {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 220px;
+  text-align: center;
+}
+
+.empty-card .vkuiDiv {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.empty-illustration {
+  width: 56px;
+  height: 56px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.25), transparent 26%),
+    linear-gradient(135deg, rgba(102, 51, 255, 0.28), rgba(204, 170, 255, 0.22));
+  color: var(--app-accent-strong);
+  font-weight: 900;
+}
+
+.step-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.step-progress {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  margin: 0;
+  border-radius: 20px;
+  background: rgba(13, 20, 33, 0.88);
+  border: 1px solid var(--app-border);
+  backdrop-filter: blur(12px);
+}
+
+.step-question {
+  display: grid;
+  min-width: 0;
+}
+
+.step-question .vkuiFormItem {
+  padding: 0 !important;
+}
+
+.step-question .vkuiFormItem__top {
+  margin-bottom: 8px;
+  color: var(--app-muted-strong) !important;
+  font-weight: 700;
+}
+
+.step-question .vkuiFormItem__bottom {
+  margin-top: 8px;
+  color: var(--app-muted) !important;
+}
+
+.step-actions {
+  display: grid;
+  margin-top: 2px;
+}
+
+.step-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.step-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--app-accent), var(--app-success));
+  transition: width 0.2s ease;
+}
+
+.question-checkboxes {
+  display: grid;
+  gap: 8px;
+}
+
+.consent-box {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(102, 51, 255, 0.2);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(102, 51, 255, 0.18), transparent 34%),
+    rgba(102, 51, 255, 0.07);
+}
+
+.consent-text {
+  max-height: 290px;
+  overflow: auto;
+  color: var(--app-muted-strong) !important;
+  white-space: pre-line;
+  line-height: 1.6;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(5, 8, 14, 0.54);
+  border: 1px solid var(--app-border);
+}
+
+.success-screen {
+  display: grid;
+  gap: 14px;
+}
+
+.success-mark {
+  width: 62px;
+  height: 62px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  color: #15101f;
+  font-size: 30px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--app-success), #b6ffa6);
+  box-shadow: 0 18px 36px rgba(68, 255, 34, 0.24);
+}
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.profile-avatar {
+  width: 68px;
+  height: 68px;
+  flex: 0 0 auto;
+  border-radius: 26px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-size: 24px;
+  font-weight: 900;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.24), transparent 30%),
+    linear-gradient(135deg, #6633ff, #ccaaff);
+  box-shadow: 0 16px 34px rgba(102, 51, 255, 0.24);
+}
+
+.profile-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.app-shell-admin .profile-summary {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.registration-card-body {
+  display: grid;
+  gap: 12px;
+}
+
+.registrations-toolbar {
+  display: grid;
+  gap: 10px;
+}
+
+.scope-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cancel-box {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 107, 122, 0.07);
+  border: 1px solid rgba(255, 107, 122, 0.12);
+}
+
+.sticky-cta {
+  /* Normal flow (was position:sticky, which floated up over the meta tiles on
+     short pages). The bottom nav clearance is handled by .app-content padding. */
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+  background: rgba(12, 18, 29, 0.9);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 86px;
+  align-self: start;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-border);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.admin-sidebar-button {
+  justify-content: flex-start;
+}
+
+.admin-main {
+  min-width: 0;
+}
+
+.admin-table {
+  display: grid;
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.admin-table-row,
+.admin-event-row {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-ink);
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.admin-event-row {
+  cursor: pointer;
+}
+
+.admin-event-row:hover,
+.admin-event-row-active {
+  background: rgba(102, 51, 255, 0.1);
+}
+
+.admin-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.admin-registration-row-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.admin-registration-row-top .status-badge {
+  justify-self: end;
+  flex-shrink: 0;
+}
+
+.admin-registration-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-form-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-form-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.admin-question-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-question-row {
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-login-card {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.snackbar-dot {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.snackbar-dot-success {
+  background: var(--app-success);
+}
+
+.snackbar-dot-error {
+  background: var(--app-danger);
+}
+
+@media (max-width: 720px) {
+  .app-shell-admin {
+    width: min(100%, var(--app-shell-width));
+  }
+
+  .page-hero {
+    padding: 18px;
+  }
+
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inline-actions,
+  .form-action-row,
+  .admin-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
