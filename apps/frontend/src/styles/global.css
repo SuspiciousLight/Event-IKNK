@@ -1,4 +1,6 @@
 ﻿:root {
+  color-scheme: dark;
+
   /* Brand palette (no green): Electric Indigo, Lavender, White, Deep Gray. */
   --app-bg: #0c0a14;
   --app-bg-soft: #141019;
@@ -32,6 +34,26 @@
    from default blue to the brand Electric Indigo. */
 .vkuiAppRoot,
 .vkuiRoot {
+  color-scheme: dark;
+
+  /* Keep VKUI internals stable when the phone/VK WebView switches system theme. */
+  --vkui--color_background_content: #0c0a14;
+  --vkui--color_background: #0c0a14;
+  --vkui--color_background_secondary: #141019;
+  --vkui--color_background_tertiary: #1b1626;
+  --vkui--color_background_modal: #141019;
+  --vkui--color_background_contrast: #f5f2ff;
+  --vkui--color_field_background: rgba(255, 255, 255, 0.055);
+  --vkui--color_field_border: rgba(204, 170, 255, 0.18);
+  --vkui--color_separator_primary: rgba(255, 255, 255, 0.08);
+  --vkui--color_separator_secondary: rgba(255, 255, 255, 0.06);
+  --vkui--color_text_primary: #f5f2ff;
+  --vkui--color_text_secondary: #cdc4e6;
+  --vkui--color_text_subhead: #9c94b8;
+  --vkui--color_text_tertiary: #9c94b8;
+  --vkui--color_icon_primary: #f5f2ff;
+  --vkui--color_icon_secondary: #cdc4e6;
+  --vkui--color_icon_medium: #9c94b8;
   --vkui--color_background_accent: #6633ff;
   --vkui--color_background_accent_themed: #6633ff;
   --vkui--color_background_accent_tint: #8a66ff;
@@ -58,10 +80,12 @@ body,
 }
 
 html {
+  color-scheme: dark;
   background: #08060f;
 }
 
 body {
+  color-scheme: dark;
   color: var(--app-ink);
   background:
     radial-gradient(circle at 12% -8%, rgba(102, 51, 255, 0.20), transparent 30%),
@@ -75,6 +99,7 @@ button,
 input,
 textarea,
 select {
+  color-scheme: dark;
   font-family: "VK Sans Display", "VK Sans", "SF Pro Display", "Segoe UI", sans-serif;
 }
 
