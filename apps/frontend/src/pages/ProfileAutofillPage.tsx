@@ -31,7 +31,7 @@ export const ProfileAutofillPage = () => {
       <PageHero
         eyebrow="Личный кабинет"
         title="Профиль автозаполнения"
-        subtitle="Идентификатор VK определяется автоматически на сервере. В профиле студент вводит только фамилию, имя и Telegram username для связи."
+        subtitle="VK ID определяется автоматически. В профиле студент вводит только фамилию, имя и Telegram username для связи."
         action={<Button mode="secondary" onClick={() => navigate('/consent')}>Согласие на ПД</Button>}
       />
 

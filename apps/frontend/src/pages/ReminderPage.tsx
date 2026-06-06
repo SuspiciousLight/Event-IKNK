@@ -44,7 +44,7 @@ export const ReminderPage = () => {
               <Button mode="secondary" onClick={() => navigate('/my-registrations')}>Назад</Button>
             </div>
             {reminder.success && <StatusBadge tone="success">{reminder.success}</StatusBadge>}
-            <Text className="muted-text">При включении напоминания VK попросит разрешение на уведомления. Backend отправляет их только по вашему VK ID.</Text>
+            <Text className="muted-text">При включении напоминания VK попросит разрешение на уведомления. Мы используем его только для ваших записей.</Text>
           </Div>
         </Card>
       </StateBlock>

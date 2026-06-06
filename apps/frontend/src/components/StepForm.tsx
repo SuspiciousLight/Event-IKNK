@@ -139,7 +139,7 @@ export const StepForm = ({
           </ButtonGroup>
         </div>
 
-        <Text className="muted-text">Обязательные поля отмечены звёздочкой. Данные проверяются на сервере.</Text>
+        <Text className="muted-text">Обязательные поля отмечены звёздочкой. Если что-то пропустите, мы подскажем.</Text>
       </Div>
     </Card>
   );

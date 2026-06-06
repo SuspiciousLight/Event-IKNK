@@ -1,6 +1,7 @@
 ﻿import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Text } from '@vkontakte/vkui';
 import { useAdminAuth } from '../providers/AdminAuthProvider';
+import { NotificationOptIn } from '../../components/NotificationOptIn';
 
 type NavItem = {
   id: string;
@@ -80,6 +81,7 @@ export const AppLayout = () => {
       </header>
 
       <main className="app-content">
+        {!isAdminRoute && <NotificationOptIn />}
         <Outlet />
       </main>
 

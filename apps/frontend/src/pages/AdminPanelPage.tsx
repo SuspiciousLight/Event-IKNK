@@ -114,7 +114,7 @@ export const AdminPanelPage = () => {
       <PageHero
         eyebrow="Админ-панель"
         title="Управление мероприятиями"
-        subtitle="Создавайте мероприятия и формы, смотрите участников, выгружайте Excel и запускайте in-app рассылки."
+        subtitle="Создавайте мероприятия и формы, смотрите участников, выгружайте Excel и запускайте VK-уведомления."
         action={<Button mode="secondary" onClick={logout}>Выйти</Button>}
       />
 

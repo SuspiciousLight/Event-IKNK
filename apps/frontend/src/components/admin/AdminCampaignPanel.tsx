@@ -45,7 +45,7 @@ export const AdminCampaignPanel = ({ eventId, onError }: AdminCampaignPanelProps
         <div>
           <Text className="eyebrow">Уведомления</Text>
           <Title level="3">Массовая рассылка участникам</Title>
-          <Text className="muted-text">Сообщение уйдёт VK-уведомлением только активным участникам выбранного мероприятия. Отменившие запись исключаются на backend.</Text>
+          <Text className="muted-text">Сообщение уйдёт VK-уведомлением только активным участникам выбранного мероприятия. Отменившие запись не получат рассылку.</Text>
         </div>
         <FormItem top="Тема">
           <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Напоминание о мероприятии" />

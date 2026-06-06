@@ -753,6 +753,42 @@ a {
   margin: 14px 0;
 }
 
+.notification-opt-in {
+  border: 1px solid rgba(98, 202, 255, 0.22);
+  background:
+    radial-gradient(circle at 14% 18%, rgba(98, 202, 255, 0.2), transparent 32%),
+    linear-gradient(135deg, rgba(20, 43, 72, 0.94), rgba(16, 24, 39, 0.94));
+}
+
+.notification-opt-in-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.notification-opt-in-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  color: #07121f;
+  font-weight: 900;
+  background: linear-gradient(135deg, #62caff, #f7fbff);
+  box-shadow: 0 14px 30px rgba(98, 202, 255, 0.24);
+}
+
+.notification-opt-in-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.notification-opt-in-actions {
+  grid-column: 1 / -1;
+}
+
 .app-shell-admin .profile-summary {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }

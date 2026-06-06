@@ -145,7 +145,7 @@ export const AdminFormBuilder = ({ selectedEventId, templates, onDone, onError }
           <div>
             <Text className="eyebrow">Форма регистрации</Text>
             <Title level="3">Вопросы для студентов</Title>
-            <Text className="muted-text">Порядок вопросов сохраняется. Сервер дополнительно проверит типы и обязательные поля.</Text>
+            <Text className="muted-text">Порядок вопросов сохраняется. Студенты увидят их в таком же порядке при записи.</Text>
           </div>
           <FormItem top="Использовать шаблон">
             <Select
