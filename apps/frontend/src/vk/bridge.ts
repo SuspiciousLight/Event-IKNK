@@ -12,6 +12,10 @@ type VkUserInfoResponse = {
   id?: number;
 };
 
+type VkAllowNotificationsResponse = {
+  result?: boolean;
+};
+
 const getVkUserIdFromSearch = (search: string): number | null => {
   const params = new URLSearchParams(search);
   const raw = params.get('vk_user_id');
@@ -79,5 +83,23 @@ export const initVkBridge = async (): Promise<VkInitState> => {
       launchParamsRaw,
       initError: error instanceof Error ? error.message : 'Unable to initialize VK bridge',
     };
+  }
+};
+
+export const requestVkNotificationsPermission = async (): Promise<boolean> => {
+  const hasVkLaunchParams = window.location.search.includes('vk_app_id=');
+  if (!hasVkLaunchParams && !import.meta.env.PROD) {
+    return true;
+  }
+
+  try {
+    const response = await withTimeout(
+      bridge.send('VKWebAppAllowNotifications') as Promise<VkAllowNotificationsResponse>,
+      2500,
+    );
+
+    return response.result !== false;
+  } catch {
+    return false;
   }
 };

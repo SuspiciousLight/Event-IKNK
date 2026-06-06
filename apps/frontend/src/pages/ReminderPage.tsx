@@ -25,7 +25,7 @@ export const ReminderPage = () => {
       <PageHero
         eyebrow="Напоминания"
         title="Не забудьте про мероприятие"
-        subtitle="Настройте in-app напоминание. Оно привязано к вашей записи и снимается при отмене регистрации."
+        subtitle="Настройте VK-уведомление. Оно привязано к вашей записи и снимается при отмене регистрации."
         action={<Button mode="secondary" onClick={() => navigate('/my-registrations')}>К моим записям</Button>}
       />
 
@@ -44,7 +44,7 @@ export const ReminderPage = () => {
               <Button mode="secondary" onClick={() => navigate('/my-registrations')}>Назад</Button>
             </div>
             {reminder.success && <StatusBadge tone="success">{reminder.success}</StatusBadge>}
-            <Text className="muted-text">Критичные проверки доступа выполняет backend: пользователь может управлять только своими напоминаниями.</Text>
+            <Text className="muted-text">При включении напоминания VK попросит разрешение на уведомления. Backend отправляет их только по вашему VK ID.</Text>
           </Div>
         </Card>
       </StateBlock>

@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useState } from 'react';
 import { ReminderDto } from '../api/contracts';
 import { remindersApi } from '../api/reminders.api';
+import { requestVkNotificationsPermission } from '../vk/bridge';
 
 const toDateTimeLocal = (date: Date) => date.toISOString().slice(0, 16);
 
@@ -63,6 +64,12 @@ export const useReminder = (registrationId?: string) => {
         }
         setSuccess('Напоминание снято.');
         return true;
+      }
+
+      const notificationsAllowed = await requestVkNotificationsPermission();
+      if (!notificationsAllowed) {
+        setError('Разрешите уведомления VK, чтобы напоминание могло прийти на телефон.');
+        return false;
       }
 
       const response = await remindersApi.setForRegistration(registrationId, new Date(remindAt).toISOString());
