@@ -139,23 +139,54 @@ a {
 .vkuiInput,
 .vkuiTextarea,
 .vkuiSelect,
+.vkuiNativeSelect,
+.vkuiCustomSelect,
+.vkuiCustomSelectInput,
+.vkuiSelectMimicry,
 .vkuiFormField {
   background: rgba(255, 255, 255, 0.055) !important;
+  background-color: rgba(255, 255, 255, 0.055) !important;
   border-color: var(--app-border-strong) !important;
   color: var(--app-ink) !important;
 }
 
 .vkuiInput__el,
 .vkuiTextarea__el,
-.vkuiSelect__el {
+.vkuiSelect__el,
+.vkuiNativeSelect__el,
+.vkuiCustomSelectInput__el,
+.vkuiFormField input,
+.vkuiFormField textarea,
+.vkuiFormField select,
+.app-shell input:not([type="checkbox"]):not([type="radio"]),
+.app-shell textarea,
+.app-shell select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  caret-color: var(--app-accent-strong);
   color: var(--app-ink) !important;
+  -webkit-text-fill-color: var(--app-ink) !important;
   /* Guard against vertical clipping of the input text (e.g. tall Cyrillic glyphs). */
   line-height: 1.4 !important;
 }
 
 .vkuiInput__el::placeholder,
-.vkuiTextarea__el::placeholder {
+.vkuiTextarea__el::placeholder,
+.vkuiFormField input::placeholder,
+.vkuiFormField textarea::placeholder,
+.app-shell input::placeholder,
+.app-shell textarea::placeholder {
   color: rgba(195, 208, 226, 0.52) !important;
+  -webkit-text-fill-color: rgba(195, 208, 226, 0.52) !important;
+  opacity: 1;
+}
+
+.app-shell select option {
+  background: #15101f;
+  color: #f5f2ff;
 }
 
 .vkuiButton--mode-primary {
@@ -867,6 +898,18 @@ a {
   border-radius: 18px;
   padding: 10px;
   background: rgba(255, 255, 255, 0.04);
+  color: var(--app-ink) !important;
+}
+
+.admin-card .vkuiFormItem__top,
+.admin-question-row .vkuiFormItem__top {
+  color: var(--app-muted-strong) !important;
+  font-weight: 700;
+}
+
+.admin-card .vkuiFormItem__bottom,
+.admin-question-row .vkuiFormItem__bottom {
+  color: var(--app-muted) !important;
 }
 
 .admin-login-card {
