@@ -63,11 +63,21 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
       if (!nextAdmin) {
         throw new Error('Для входа требуется роль администратора');
       }
-      setAdmin(nextAdmin);
-      return nextAdmin;
+
+      const confirmedResponse = await authApi.me();
+      const confirmedAdmin = toAdminSession(confirmedResponse);
+      if (!confirmedAdmin) {
+        throw new Error('Не удалось подтвердить сессию администратора');
+      }
+
+      setAdmin(confirmedAdmin);
+      return confirmedAdmin;
     } catch (requestError: unknown) {
       setAdmin(null);
-      setError(requestError instanceof Error ? requestError.message : 'Не удалось войти');
+      const message = requestError instanceof Error
+        ? requestError.message
+        : 'Не удалось войти';
+      setError(message);
       throw requestError;
     } finally {
       setLoading(false);
@@ -77,6 +87,8 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const logoutAdmin = useCallback(async () => {
     try {
       await authApi.logoutAdmin();
+    } catch {
+      // Local session is cleared even if the server already considers it expired.
     } finally {
       setAdmin(null);
       setError(null);

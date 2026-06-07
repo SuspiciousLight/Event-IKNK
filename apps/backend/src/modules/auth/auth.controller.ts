@@ -8,7 +8,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { CookieOptions, Response } from 'express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -34,11 +34,8 @@ export class AuthController {
   ) {
     const result = await this.authService.loginAdmin(dto, this.getRequestAuditContext(request));
 
-    response.cookie(process.env.JWT_COOKIE_NAME || 'admin_access_token', result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
+    response.cookie(this.getAdminCookieName(), result.token, {
+      ...this.getAdminCookieOptions(),
       maxAge: 12 * 60 * 60 * 1000,
     });
 
@@ -60,12 +57,7 @@ export class AuthController {
   ) {
     await this.authService.logoutAdmin(user, this.getRequestAuditContext(request));
 
-    response.clearCookie(process.env.JWT_COOKIE_NAME || 'admin_access_token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
+    response.clearCookie(this.getAdminCookieName(), this.getAdminCookieOptions());
 
     return { success: true };
   }
@@ -74,6 +66,43 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async me(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.getMe(user.userId);
+  }
+
+  private getAdminCookieName(): string {
+    return process.env.JWT_COOKIE_NAME || 'admin_access_token';
+  }
+
+  private getAdminCookieOptions(): CookieOptions {
+    const sameSite = this.getCookieSameSite();
+    const secure = this.getCookieSecure(sameSite);
+
+    return {
+      httpOnly: true,
+      secure,
+      sameSite,
+      path: '/',
+    };
+  }
+
+  private getCookieSameSite(): CookieOptions['sameSite'] {
+    const configured = process.env.ADMIN_COOKIE_SAME_SITE?.trim().toLowerCase();
+    if (configured === 'lax' || configured === 'strict' || configured === 'none') {
+      return configured;
+    }
+
+    return process.env.NODE_ENV === 'production' ? 'none' : 'lax';
+  }
+
+  private getCookieSecure(sameSite: CookieOptions['sameSite']): boolean {
+    const configured = process.env.ADMIN_COOKIE_SECURE?.trim().toLowerCase();
+    if (configured === 'true' || configured === '1') {
+      return true;
+    }
+    if (configured === 'false' || configured === '0') {
+      return false;
+    }
+
+    return sameSite === 'none' || process.env.NODE_ENV === 'production';
   }
 
   private getRequestAuditContext(request: RequestWithUser): { ipAddress?: string; userAgent?: string } {
