@@ -74,26 +74,6 @@ export const ProfileAutofillPage = () => {
             </Div>
           </Card>
 
-          <Card mode="shadow" className="profile-card admin-entry-card">
-            <Div className="grid-stack">
-              <div>
-                <Text className="eyebrow">Для организаторов</Text>
-                <Title level="3">Администрирование</Title>
-                <Text className="muted-text">
-                  Если у вас есть права администратора, войдите в панель управления мероприятиями.
-                </Text>
-              </div>
-              <Button
-                type="button"
-                mode="secondary"
-                size="l"
-                onClick={() => navigate(isAdmin ? '/admin' : '/admin-login')}
-              >
-                {isAdmin ? 'Открыть админ-панель' : 'Войти как администратор'}
-              </Button>
-            </Div>
-          </Card>
-
           <Card mode="shadow" className="profile-card">
             <Div>
               <form onSubmit={submit} className="admin-form-grid">
@@ -156,6 +136,16 @@ export const ProfileAutofillPage = () => {
               {profile.success && <Text className="status-badge status-badge-success">{profile.success}</Text>}
             </Div>
           </Card>
+
+          <div className="admin-entry">
+            <button
+              type="button"
+              className="admin-entry-link"
+              onClick={() => navigate(isAdmin ? '/admin' : '/admin-login')}
+            >
+              {isAdmin ? 'Панель администратора' : 'Вход для администраторов'}
+            </button>
+          </div>
         </div>
       </StateBlock>
       {snackbar}

@@ -215,7 +215,11 @@ a {
   display: flex;
   flex-direction: column;
   width: min(100%, var(--app-shell-width));
-  min-height: 100dvh;
+  /* Fixed viewport height so the inner .app-content scrolls and the bottom
+     nav (absolutely pinned to the shell) stays visible at all scroll positions.
+     vh fallback first, dvh for browsers that support the dynamic unit. */
+  height: 100vh;
+  height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
   background:
@@ -796,11 +800,33 @@ a {
   margin: 14px 0;
 }
 
-.admin-entry-card {
-  border: 1px solid rgba(204, 170, 255, 0.16);
-  background:
-    radial-gradient(circle at 12% 0%, rgba(204, 170, 255, 0.12), transparent 34%),
-    rgba(255, 255, 255, 0.045);
+/* Inconspicuous admin entry: a quiet, muted link the average student ignores. */
+.admin-entry {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+}
+
+.admin-entry-link {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 6px 10px;
+  color: var(--app-muted);
+  opacity: 0.5;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: opacity 140ms ease, color 140ms ease;
+}
+
+.admin-entry-link:hover,
+.admin-entry-link:focus-visible {
+  opacity: 1;
+  color: var(--app-muted-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .notification-opt-in {
