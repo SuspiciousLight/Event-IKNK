@@ -1,4 +1,5 @@
-﻿import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+﻿import { useCallback, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Text } from '@vkontakte/vkui';
 import { useAdminAuth } from '../providers/AdminAuthProvider';
 import { AppPullToRefresh } from '../../components/AppPullToRefresh';
@@ -40,6 +41,7 @@ export const AppLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin } = useAdminAuth();
+  const [navHidden, setNavHidden] = useState(false);
   const isAdminRoute = location.pathname.startsWith('/admin');
   const navItems = isAdmin
     ? [
@@ -53,6 +55,10 @@ export const AppLayout = () => {
         },
       ]
     : NAV_ITEMS;
+
+  const handleScrollDirection = useCallback((direction: 'top' | 'up' | 'down') => {
+    setNavHidden(direction === 'down');
+  }, []);
 
   return (
     <div className={`app-shell ${isAdminRoute ? 'app-shell-admin' : ''}`}>
@@ -81,12 +87,12 @@ export const AppLayout = () => {
         </div>
       </header>
 
-      <AppPullToRefresh>
+      <AppPullToRefresh onScrollDirectionChange={handleScrollDirection}>
         {!isAdminRoute && <NotificationOptIn />}
         <Outlet />
       </AppPullToRefresh>
 
-      <nav className="app-nav" aria-label="Основная навигация">
+      <nav className={`app-nav ${navHidden ? 'app-nav-hidden' : ''}`} aria-label="Основная навигация">
         {navItems.map((item) => {
           const active = item.isActive(location.pathname);
           return (

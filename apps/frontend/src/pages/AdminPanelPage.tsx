@@ -34,6 +34,7 @@ export const AdminPanelPage = () => {
   const { logoutAdmin } = useAdminAuth();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
   useRegisterRefresh(panel.refresh, Boolean(panel.admin));
   useRealtimeRefresh(panel.refresh, {
@@ -97,6 +98,11 @@ export const AdminPanelPage = () => {
   };
 
   const exportExcel = async () => {
+    if (isMobileDevice) {
+      showError('В мобильном VK Excel может открыться неправильно. Скачайте файл с компьютера, а на телефоне используйте список участников.');
+      return;
+    }
+
     if (!panel.selectedEventId) {
       showError('Выберите мероприятие для выгрузки.');
       return;
@@ -319,8 +325,15 @@ export const AdminPanelPage = () => {
                       Показывать отменённые
                     </Checkbox>
                     <Button onClick={() => panel.loadRegistrations(1)}>Применить</Button>
-                    <Button mode="secondary" onClick={exportExcel}>Excel</Button>
+                    <Button mode="secondary" disabled={isMobileDevice} onClick={exportExcel}>
+                      {isMobileDevice ? 'Excel на ПК' : 'Excel'}
+                    </Button>
                   </div>
+                  {isMobileDevice && (
+                    <Text className="muted-text">
+                      На телефоне участники доступны в списке ниже. Excel лучше скачивать с компьютера, чтобы файл нормально сохранился.
+                    </Text>
+                  )}
                   <AdminRegistrationsTable
                     rows={panel.registrations}
                     meta={panel.registrationsMeta ?? undefined}

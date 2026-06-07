@@ -1,14 +1,22 @@
-import { ReactNode, TouchEvent, useMemo, useRef, useState } from 'react';
+import { ReactNode, TouchEvent, UIEvent, useMemo, useRef, useState } from 'react';
 import { Button, Text } from '@vkontakte/vkui';
 import { useRefresh } from '../app/providers/RefreshProvider';
 
 const TRIGGER_DISTANCE = 66;
 const MAX_DISTANCE = 96;
 
-export const AppPullToRefresh = ({ children }: { children: ReactNode }) => {
+type ScrollDirection = 'top' | 'up' | 'down';
+
+type AppPullToRefreshProps = {
+  children: ReactNode;
+  onScrollDirectionChange?: (direction: ScrollDirection) => void;
+};
+
+export const AppPullToRefresh = ({ children, onScrollDirectionChange }: AppPullToRefreshProps) => {
   const { isRefreshing, lastUpdatedAt, refreshError, refreshAll } = useRefresh();
   const contentRef = useRef<HTMLElement | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const lastScrollTopRef = useRef(0);
   const [pullDistance, setPullDistance] = useState(0);
   const supportsTouch = useMemo(
     () => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0),
@@ -52,6 +60,21 @@ export const AppPullToRefresh = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const handleScroll = (event: UIEvent<HTMLElement>) => {
+    const scrollTop = event.currentTarget.scrollTop;
+    const lastScrollTop = lastScrollTopRef.current;
+
+    if (scrollTop <= 8) {
+      onScrollDirectionChange?.('top');
+    } else if (scrollTop > lastScrollTop + 8) {
+      onScrollDirectionChange?.('down');
+    } else if (scrollTop < lastScrollTop - 8) {
+      onScrollDirectionChange?.('up');
+    }
+
+    lastScrollTopRef.current = Math.max(0, scrollTop);
+  };
+
   const indicatorText = isRefreshing
     ? 'Обновляем данные...'
     : pullDistance >= TRIGGER_DISTANCE
@@ -66,6 +89,7 @@ export const AppPullToRefresh = ({ children }: { children: ReactNode }) => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
+      onScroll={handleScroll}
     >
       <div
         className={`pull-refresh-indicator ${isRefreshing || pullDistance > 0 ? 'pull-refresh-indicator-visible' : ''}`}

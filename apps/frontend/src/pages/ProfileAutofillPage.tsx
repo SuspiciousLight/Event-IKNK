@@ -1,6 +1,7 @@
 import { FormEvent, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Div, FormItem, Group, Input, Text, Title } from '@vkontakte/vkui';
+import { useAdminAuth } from '../app/providers/AdminAuthProvider';
 import { PageHero, StateBlock, StatusBadge, InfoRow } from '../components/common/Ui';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
 import { useProfileAutofill } from '../hooks/useProfileAutofill';
@@ -16,6 +17,7 @@ const getInitials = (firstName?: string, lastName?: string) => {
 export const ProfileAutofillPage = () => {
   const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
+  const { isAdmin } = useAdminAuth();
   const profile = useProfileAutofill();
   const refreshProfile = useCallback(async () => {
     await profile.reload();
@@ -69,6 +71,26 @@ export const ProfileAutofillPage = () => {
                 </div>
               )}
 
+            </Div>
+          </Card>
+
+          <Card mode="shadow" className="profile-card admin-entry-card">
+            <Div className="grid-stack">
+              <div>
+                <Text className="eyebrow">Для организаторов</Text>
+                <Title level="3">Администрирование</Title>
+                <Text className="muted-text">
+                  Если у вас есть права администратора, войдите в панель управления мероприятиями.
+                </Text>
+              </div>
+              <Button
+                type="button"
+                mode="secondary"
+                size="l"
+                onClick={() => navigate(isAdmin ? '/admin' : '/admin-login')}
+              >
+                {isAdmin ? 'Открыть админ-панель' : 'Войти как администратор'}
+              </Button>
             </Div>
           </Card>
 
