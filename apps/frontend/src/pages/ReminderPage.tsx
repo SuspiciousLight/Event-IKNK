@@ -4,12 +4,15 @@ import { ReminderToggle } from '../components/ReminderToggle';
 import { PageHero, StateBlock, StatusBadge } from '../components/common/Ui';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
 import { useReminder } from '../hooks/useReminder';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 
 export const ReminderPage = () => {
   const navigate = useNavigate();
   const { registrationId } = useParams<{ registrationId: string }>();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const reminder = useReminder(registrationId);
+
+  useRegisterRefresh(reminder.reload);
 
   const save = async () => {
     const ok = await reminder.save();

@@ -1,6 +1,7 @@
 ﻿import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Text } from '@vkontakte/vkui';
 import { useAdminAuth } from '../providers/AdminAuthProvider';
+import { AppPullToRefresh } from '../../components/AppPullToRefresh';
 import { NotificationOptIn } from '../../components/NotificationOptIn';
 
 type NavItem = {
@@ -80,10 +81,10 @@ export const AppLayout = () => {
         </div>
       </header>
 
-      <main className="app-content">
+      <AppPullToRefresh>
         {!isAdminRoute && <NotificationOptIn />}
         <Outlet />
-      </main>
+      </AppPullToRefresh>
 
       <nav className="app-nav" aria-label="Основная навигация">
         {navItems.map((item) => {

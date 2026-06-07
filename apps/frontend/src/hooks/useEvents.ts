@@ -2,13 +2,19 @@
 import { EventSummaryDto } from '../api/contracts';
 import { eventsApi } from '../api/events.api';
 
+type LoadOptions = {
+  silent?: boolean;
+};
+
 export const useEvents = () => {
   const [events, setEvents] = useState<EventSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (options: LoadOptions = {}) => {
+    if (!options.silent) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -17,7 +23,9 @@ export const useEvents = () => {
     } catch (requestError: unknown) {
       setError(requestError instanceof Error ? requestError.message : 'Не удалось загрузить мероприятия');
     } finally {
-      setLoading(false);
+      if (!options.silent) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -25,5 +33,7 @@ export const useEvents = () => {
     void load();
   }, [load]);
 
-  return { events, loading, error, reload: load };
+  const refresh = useCallback(() => load({ silent: true }), [load]);
+
+  return { events, loading, error, reload: load, refresh };
 };

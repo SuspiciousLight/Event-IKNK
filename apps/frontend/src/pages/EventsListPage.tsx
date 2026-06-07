@@ -4,11 +4,16 @@ import { Group, Input, Text } from '@vkontakte/vkui';
 import { EventCard } from '../components/EventCard';
 import { StateBlock, PageHero, EmptyState } from '../components/common/Ui';
 import { useEvents } from '../hooks/useEvents';
+import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 
 export const EventsListPage = () => {
   const navigate = useNavigate();
-  const { events, loading, error } = useEvents();
+  const { events, loading, error, reload, refresh } = useEvents();
   const [query, setQuery] = useState('');
+
+  useRegisterRefresh(refresh);
+  useRealtimeRefresh(refresh, { intervalMs: 45_000 });
 
   const filteredEvents = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -52,7 +57,7 @@ export const EventsListPage = () => {
           title: 'Мероприятий пока нет',
           text: 'Как только администратор опубликует мероприятие, оно появится здесь красивой карточкой.',
           actionLabel: 'Обновить',
-          onAction: () => window.location.reload(),
+          onAction: () => void reload(),
         }}
       >
         {filteredEvents.length === 0 ? (

@@ -12,6 +12,8 @@ import { AdminRegistrationsTable } from '../components/AdminRegistrationsTable';
 import { PageHero, StateBlock, StatusBadge, InfoRow } from '../components/common/Ui';
 import { useAdminPanel } from '../hooks/useAdminPanel';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
+import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { formatDateRange, formatStatus } from '../utils/format';
 
 type AdminTab = 'overview' | 'events' | 'forms' | 'templates' | 'registrations' | 'campaigns' | 'audit';
@@ -32,6 +34,12 @@ export const AdminPanelPage = () => {
   const { logoutAdmin } = useAdminAuth();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+
+  useRegisterRefresh(panel.refresh, Boolean(panel.admin));
+  useRealtimeRefresh(panel.refresh, {
+    enabled: Boolean(panel.admin),
+    intervalMs: activeTab === 'registrations' ? 20_000 : 45_000,
+  });
 
   const selectedEvent = panel.events.find((event) => event.id === panel.selectedEventId);
   const activeEvents = panel.events.filter((event) => event.status === 'PUBLISHED').length;

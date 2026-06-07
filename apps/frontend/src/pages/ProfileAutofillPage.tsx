@@ -1,9 +1,10 @@
-import { FormEvent } from 'react';
+import { FormEvent, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Div, FormItem, Group, Input, Text, Title } from '@vkontakte/vkui';
 import { PageHero, StateBlock, StatusBadge, InfoRow } from '../components/common/Ui';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
 import { useProfileAutofill } from '../hooks/useProfileAutofill';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { formatDateTime } from '../utils/format';
 
 const getInitials = (firstName?: string, lastName?: string) => {
@@ -16,6 +17,11 @@ export const ProfileAutofillPage = () => {
   const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const profile = useProfileAutofill();
+  const refreshProfile = useCallback(async () => {
+    await profile.reload();
+  }, [profile.reload]);
+
+  useRegisterRefresh(refreshProfile);
 
   const submit = async (event: FormEvent) => {
     const ok = await profile.submit(event);

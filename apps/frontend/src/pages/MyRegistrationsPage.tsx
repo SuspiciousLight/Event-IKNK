@@ -5,6 +5,8 @@ import { RegistrationListItemDto } from '../api/contracts';
 import { InfoRow, PageHero, StateBlock, StatusBadge } from '../components/common/Ui';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
 import { MyRegistrationsScope, useMyRegistrations } from '../hooks/useMyRegistrations';
+import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { formatDateRange, formatDateTime, formatStatus } from '../utils/format';
 
 const RegistrationCard = ({
@@ -93,9 +95,12 @@ export const MyRegistrationsPage = () => {
   const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const [scope, setScope] = useState<MyRegistrationsScope>('active');
-  const { items, loading, error, busyId, cancel } = useMyRegistrations(scope);
+  const { items, loading, error, busyId, cancel, refresh } = useMyRegistrations(scope);
   const [cancelReasonById, setCancelReasonById] = useState<Record<string, string>>({});
   const isArchive = scope === 'archive';
+
+  useRegisterRefresh(refresh);
+  useRealtimeRefresh(refresh, { intervalMs: isArchive ? 90_000 : 35_000 });
 
   const cancelRegistration = async (registrationId: string, eventTitle?: string) => {
     const confirmed = window.confirm(

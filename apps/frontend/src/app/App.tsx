@@ -4,6 +4,7 @@ import { AppRoot, Div, Spinner } from '@vkontakte/vkui';
 import { configureApiClient } from '../api/client';
 import { AdminAuthProvider, useAdminAuth } from './providers/AdminAuthProvider';
 import { CurrentProfileProvider } from './providers/CurrentProfileProvider';
+import { RefreshProvider } from './providers/RefreshProvider';
 import { AppLayout } from './layout/AppLayout';
 import { AdminLoginPage } from '../pages/AdminLoginPage';
 import { AdminPanelPage } from '../pages/AdminPanelPage';
@@ -93,23 +94,25 @@ export const App = () => {
     <AppRoot mode="embedded">
       <AdminAuthProvider>
         <CurrentProfileProvider>
-          <HashRouter>
-            <Routes>
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Navigate to="/events" replace />} />
-                <Route path="/events" element={<EventsListPage />} />
-                <Route path="/events/:eventId" element={<EventDetailsPage />} />
-                <Route path="/events/:eventId/register" element={<RegistrationWizardPage />} />
-                <Route path="/my-registrations" element={<MyRegistrationsPage />} />
-                <Route path="/profile" element={<ProfileAutofillPage />} />
-                <Route path="/consent" element={<ConsentPage />} />
-                <Route path="/reminder/:registrationId" element={<ReminderPage />} />
-                <Route path="/admin-login" element={<AdminLoginRoute />} />
-                <Route path="/admin" element={<AdminRoute />} />
-                <Route path="*" element={<Navigate to="/events" replace />} />
-              </Route>
-            </Routes>
-          </HashRouter>
+          <RefreshProvider>
+            <HashRouter>
+              <Routes>
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Navigate to="/events" replace />} />
+                  <Route path="/events" element={<EventsListPage />} />
+                  <Route path="/events/:eventId" element={<EventDetailsPage />} />
+                  <Route path="/events/:eventId/register" element={<RegistrationWizardPage />} />
+                  <Route path="/my-registrations" element={<MyRegistrationsPage />} />
+                  <Route path="/profile" element={<ProfileAutofillPage />} />
+                  <Route path="/consent" element={<ConsentPage />} />
+                  <Route path="/reminder/:registrationId" element={<ReminderPage />} />
+                  <Route path="/admin-login" element={<AdminLoginRoute />} />
+                  <Route path="/admin" element={<AdminRoute />} />
+                  <Route path="*" element={<Navigate to="/events" replace />} />
+                </Route>
+              </Routes>
+            </HashRouter>
+          </RefreshProvider>
         </CurrentProfileProvider>
       </AdminAuthProvider>
     </AppRoot>

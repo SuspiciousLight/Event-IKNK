@@ -1,10 +1,11 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
 import { Button, Card, Div, Group, Text, Title } from '@vkontakte/vkui';
 import { consentsApi } from '../api/consents.api';
 import { ConsentDocumentDto, ConsentRecordDto } from '../api/contracts';
 import { ConsentBlock } from '../components/ConsentBlock';
 import { PageHero, StateBlock } from '../components/common/Ui';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { formatDateTime } from '../utils/format';
 
 export const ConsentPage = () => {
@@ -16,7 +17,7 @@ export const ConsentPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -29,11 +30,13 @@ export const ConsentPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
+
+  useRegisterRefresh(load);
 
   const saveConsent = async () => {
     if (!consentDocument) {

@@ -9,6 +9,10 @@ import {
   PaginationDto,
 } from '../api/contracts';
 
+type LoadOptions = {
+  silent?: boolean;
+};
+
 export const useAdminPanel = () => {
   const { admin } = useAdminAuth();
   const [events, setEvents] = useState<AdminEventDto[]>([]);
@@ -27,7 +31,7 @@ export const useAdminPanel = () => {
   const [registrationsError, setRegistrationsError] = useState<string | null>(null);
   const [logsError, setLogsError] = useState<string | null>(null);
 
-  const loadBaseData = useCallback(async () => {
+  const loadBaseData = useCallback(async (options: LoadOptions = {}) => {
     if (!admin) {
       setEvents([]);
       setTemplates([]);
@@ -39,7 +43,9 @@ export const useAdminPanel = () => {
       return;
     }
 
-    setLoading(true);
+    if (!options.silent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const [eventsResponse, templatesResponse] = await Promise.all([
@@ -53,18 +59,22 @@ export const useAdminPanel = () => {
     } catch (requestError: unknown) {
       setError(requestError instanceof Error ? requestError.message : 'Не удалось загрузить админ-панель');
     } finally {
-      setLoading(false);
+      if (!options.silent) {
+        setLoading(false);
+      }
     }
   }, [admin]);
 
-  const loadRegistrations = useCallback(async (page = registrationsPage) => {
+  const loadRegistrations = useCallback(async (page = registrationsPage, options: LoadOptions = {}) => {
     if (!selectedEventId) {
       setRegistrations([]);
       setRegistrationsMeta(null);
       return;
     }
 
-    setRegistrationsLoading(true);
+    if (!options.silent) {
+      setRegistrationsLoading(true);
+    }
     setRegistrationsError(null);
     try {
       const response = await adminApi.getEventRegistrations(selectedEventId, {
@@ -81,12 +91,16 @@ export const useAdminPanel = () => {
     } catch (requestError: unknown) {
       setRegistrationsError(requestError instanceof Error ? requestError.message : 'Не удалось загрузить участников');
     } finally {
-      setRegistrationsLoading(false);
+      if (!options.silent) {
+        setRegistrationsLoading(false);
+      }
     }
   }, [includeCanceled, registrationsPage, registrationsSearch, selectedEventId]);
 
-  const loadLogs = useCallback(async () => {
-    setLogsLoading(true);
+  const loadLogs = useCallback(async (options: LoadOptions = {}) => {
+    if (!options.silent) {
+      setLogsLoading(true);
+    }
     setLogsError(null);
     try {
       const response = await adminApi.listAuditLogs({ page: 1, pageSize: 10 });
@@ -94,9 +108,23 @@ export const useAdminPanel = () => {
     } catch (requestError: unknown) {
       setLogsError(requestError instanceof Error ? requestError.message : 'Не удалось загрузить журнал действий');
     } finally {
-      setLogsLoading(false);
+      if (!options.silent) {
+        setLogsLoading(false);
+      }
     }
   }, []);
+
+  const refresh = useCallback(async () => {
+    if (!admin) {
+      return;
+    }
+
+    await Promise.all([
+      loadBaseData({ silent: true }),
+      selectedEventId ? loadRegistrations(registrationsPage, { silent: true }) : Promise.resolve(),
+      loadLogs({ silent: true }),
+    ]);
+  }, [admin, loadBaseData, loadLogs, loadRegistrations, registrationsPage, selectedEventId]);
 
   useEffect(() => {
     void loadBaseData();
@@ -137,5 +165,6 @@ export const useAdminPanel = () => {
     loadBaseData,
     loadRegistrations,
     loadLogs,
+    refresh,
   };
 };

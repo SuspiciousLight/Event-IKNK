@@ -4,6 +4,7 @@ import { ConsentBlock } from '../components/ConsentBlock';
 import { StepForm } from '../components/StepForm';
 import { InfoRow, PageHero, StateBlock, StatusBadge } from '../components/common/Ui';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { useRegistrationWizard } from '../hooks/useRegistrationWizard';
 import { formatDateRange } from '../utils/format';
 
@@ -12,6 +13,8 @@ export const RegistrationWizardPage = () => {
   const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const wizard = useRegistrationWizard(eventId);
+
+  useRegisterRefresh(wizard.reload);
 
   const finishRegistration = async () => {
     const ok = await wizard.submitRegistration();

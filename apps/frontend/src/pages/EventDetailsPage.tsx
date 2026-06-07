@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Div, Group, Text, Title } from '@vkontakte/vkui';
 import { EventCard } from '../components/EventCard';
@@ -5,6 +6,8 @@ import { InfoRow, PageHero, StateBlock, StatusBadge } from '../components/common
 import { useCurrentProfile } from '../app/providers/CurrentProfileProvider';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
 import { useEventDetails } from '../hooks/useEventDetails';
+import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh';
+import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { useWaitlist } from '../hooks/useWaitlist';
 import { formatDateRange, getAvailableSeatsLabel } from '../utils/format';
 
@@ -12,7 +15,7 @@ export const EventDetailsPage = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
-  const { eventCard: payload, loading, error, reload } = useEventDetails(eventId);
+  const { eventCard: payload, loading, error, reload, refresh } = useEventDetails(eventId);
   const waitlist = useWaitlist(eventId);
   const { hasProfile, loading: profileLoading } = useCurrentProfile();
   const event = payload?.event;
@@ -26,6 +29,12 @@ export const EventDetailsPage = () => {
   const subscription = waitlist.status?.subscription ?? payload?.myWaitlistSubscription ?? null;
   const isWaitlistActive = subscription?.status === 'ACTIVE';
   const isWaitlistNotified = subscription?.status === 'NOTIFIED';
+  const refreshDetails = useCallback(async () => {
+    await Promise.all([refresh(), waitlist.reload()]);
+  }, [refresh, waitlist.reload]);
+
+  useRegisterRefresh(refreshDetails);
+  useRealtimeRefresh(refreshDetails, { intervalMs: 30_000 });
 
   const subscribeToWaitlist = async () => {
     const ok = await waitlist.subscribe();

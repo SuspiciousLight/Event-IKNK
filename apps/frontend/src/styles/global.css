@@ -294,8 +294,61 @@ a {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   /* Bottom padding clears the floating bottom navigation (~80px + 14px offset). */
   padding: 14px 14px 120px;
+}
+
+.pull-refresh-indicator {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  color: var(--app-muted-strong);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.pull-refresh-indicator-visible {
+  height: 30px;
+  opacity: 1;
+}
+
+.pull-refresh-spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(204, 170, 255, 0.22);
+  border-top-color: var(--app-accent-strong);
+}
+
+.pull-refresh-spinner-active {
+  animation: app-spin 820ms linear infinite;
+}
+
+.refresh-fallback {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@keyframes app-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .app-nav {
@@ -991,5 +1044,46 @@ a {
   .admin-filter-row {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+@media (min-width: 760px) {
+  .app-shell:not(.app-shell-admin) {
+    --app-shell-width: 520px;
+  }
+
+  .app-content {
+    padding-inline: 18px;
+  }
+}
+
+@media (min-width: 1180px) {
+  .app-shell-admin {
+    --app-admin-width: 1180px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-topbar {
+    padding-inline: 12px;
+  }
+
+  .app-content {
+    padding-inline: 10px;
+  }
+
+  .app-nav {
+    left: 10px;
+    right: 10px;
+    gap: 4px;
+  }
+
+  .app-nav-button {
+    font-size: 10px;
+    padding-inline: 4px;
+  }
+
+  .refresh-fallback {
+    grid-template-columns: 1fr;
   }
 }
