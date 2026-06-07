@@ -1,5 +1,5 @@
-import { ReactNode, TouchEvent, UIEvent, useMemo, useRef, useState } from 'react';
-import { Button, Text } from '@vkontakte/vkui';
+﻿import { ReactNode, TouchEvent, UIEvent, useRef, useState } from 'react';
+import { Text } from '@vkontakte/vkui';
 import { useRefresh } from '../app/providers/RefreshProvider';
 
 const TRIGGER_DISTANCE = 66;
@@ -13,15 +13,11 @@ type AppPullToRefreshProps = {
 };
 
 export const AppPullToRefresh = ({ children, onScrollDirectionChange }: AppPullToRefreshProps) => {
-  const { isRefreshing, lastUpdatedAt, refreshError, refreshAll } = useRefresh();
+  const { isRefreshing, refreshError, refreshAll } = useRefresh();
   const contentRef = useRef<HTMLElement | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const lastScrollTopRef = useRef(0);
   const [pullDistance, setPullDistance] = useState(0);
-  const supportsTouch = useMemo(
-    () => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0),
-    [],
-  );
 
   const isAtTop = () => (contentRef.current?.scrollTop ?? 0) <= 0;
 
@@ -99,18 +95,6 @@ export const AppPullToRefresh = ({ children, onScrollDirectionChange }: AppPullT
         <span className={`pull-refresh-spinner ${isRefreshing ? 'pull-refresh-spinner-active' : ''}`} aria-hidden="true" />
         <Text>{indicatorText}</Text>
       </div>
-
-      {!supportsTouch && (
-        <div className="refresh-fallback">
-          <Text className="muted-text">
-            Автообновление включено. Если данные устарели, обновите экран вручную.
-            {lastUpdatedAt ? ` Последнее обновление: ${lastUpdatedAt.toLocaleTimeString()}.` : ''}
-          </Text>
-          <Button size="s" mode="secondary" loading={isRefreshing} onClick={() => void refreshAll()}>
-            Обновить
-          </Button>
-        </div>
-      )}
 
       {refreshError && <Text className="status-badge status-badge-warning">{refreshError}</Text>}
       {children}

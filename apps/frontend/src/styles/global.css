@@ -333,18 +333,6 @@ a {
   animation: app-spin 820ms linear infinite;
 }
 
-.refresh-fallback {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--app-border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
 @keyframes app-spin {
   to {
     transform: rotate(360deg);
@@ -370,12 +358,6 @@ a {
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
   transition: transform 180ms ease, opacity 180ms ease;
   will-change: transform, opacity;
-}
-
-.app-nav-hidden {
-  transform: translateY(calc(100% + 22px)) scale(0.98);
-  opacity: 0.28;
-  pointer-events: none;
 }
 
 .app-nav-button {
@@ -1106,7 +1088,4 @@ a {
     padding-inline: 4px;
   }
 
-  .refresh-fallback {
-    grid-template-columns: 1fr;
-  }
 }

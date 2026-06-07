@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../app/providers/AdminAuthProvider';
 import { adminApi } from '../api/admin.api';
+import { HttpError } from '../api/client';
 import {
   AdminEventDto,
   AdminFormTemplateDto,
@@ -14,7 +15,7 @@ type LoadOptions = {
 };
 
 export const useAdminPanel = () => {
-  const { admin } = useAdminAuth();
+  const { admin, logoutAdmin } = useAdminAuth();
   const [events, setEvents] = useState<AdminEventDto[]>([]);
   const [templates, setTemplates] = useState<AdminFormTemplateDto[]>([]);
   const [logs, setLogs] = useState<AuditLogDto[]>([]);
@@ -30,6 +31,15 @@ export const useAdminPanel = () => {
   const [error, setError] = useState<string | null>(null);
   const [registrationsError, setRegistrationsError] = useState<string | null>(null);
   const [logsError, setLogsError] = useState<string | null>(null);
+
+  const handleAdminRequestError = useCallback(async (requestError: unknown, fallback: string) => {
+    if (requestError instanceof HttpError && (requestError.status === 401 || requestError.status === 403)) {
+      await logoutAdmin();
+      return 'Сессия администратора истекла. Войдите снова.';
+    }
+
+    return requestError instanceof Error ? requestError.message : fallback;
+  }, [logoutAdmin]);
 
   const loadBaseData = useCallback(async (options: LoadOptions = {}) => {
     if (!admin) {
@@ -57,13 +67,13 @@ export const useAdminPanel = () => {
       setTemplates(templatesResponse.items);
       setSelectedEventId((prev) => prev || eventsResponse.items[0]?.id || '');
     } catch (requestError: unknown) {
-      setError(requestError instanceof Error ? requestError.message : 'Не удалось загрузить админ-панель');
+      setError(await handleAdminRequestError(requestError, 'Не удалось загрузить админ-панель'));
     } finally {
       if (!options.silent) {
         setLoading(false);
       }
     }
-  }, [admin]);
+  }, [admin, handleAdminRequestError]);
 
   const loadRegistrations = useCallback(async (page = registrationsPage, options: LoadOptions = {}) => {
     if (!selectedEventId) {
@@ -89,13 +99,13 @@ export const useAdminPanel = () => {
       setRegistrationsMeta(response.meta);
       setRegistrationsPage(page);
     } catch (requestError: unknown) {
-      setRegistrationsError(requestError instanceof Error ? requestError.message : 'Не удалось загрузить участников');
+      setRegistrationsError(await handleAdminRequestError(requestError, 'Не удалось загрузить участников'));
     } finally {
       if (!options.silent) {
         setRegistrationsLoading(false);
       }
     }
-  }, [includeCanceled, registrationsPage, registrationsSearch, selectedEventId]);
+  }, [handleAdminRequestError, includeCanceled, registrationsPage, registrationsSearch, selectedEventId]);
 
   const loadLogs = useCallback(async (options: LoadOptions = {}) => {
     if (!options.silent) {
@@ -106,13 +116,13 @@ export const useAdminPanel = () => {
       const response = await adminApi.listAuditLogs({ page: 1, pageSize: 10 });
       setLogs(response.items);
     } catch (requestError: unknown) {
-      setLogsError(requestError instanceof Error ? requestError.message : 'Не удалось загрузить журнал действий');
+      setLogsError(await handleAdminRequestError(requestError, 'Не удалось загрузить журнал действий'));
     } finally {
       if (!options.silent) {
         setLogsLoading(false);
       }
     }
-  }, []);
+  }, [handleAdminRequestError]);
 
   const refresh = useCallback(async () => {
     if (!admin) {

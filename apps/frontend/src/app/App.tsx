@@ -18,7 +18,7 @@ import { ReminderPage } from '../pages/ReminderPage';
 import { initVkBridge, VkInitState } from '../vk/bridge';
 
 const AdminRoute = () => {
-  const { isAdmin, loading } = useAdminAuth();
+  const { isAdmin, loading, error } = useAdminAuth();
 
   if (loading) {
     return (
@@ -28,7 +28,7 @@ const AdminRoute = () => {
     );
   }
 
-  return isAdmin ? <AdminPanelPage /> : <AdminLoginPage />;
+  return isAdmin && !error ? <AdminPanelPage /> : <AdminLoginPage />;
 };
 
 const AdminLoginRoute = () => {
