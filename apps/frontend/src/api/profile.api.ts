@@ -2,7 +2,6 @@
 import { ProfileDisclaimerDto, UserProfileDto } from './contracts';
 
 export type UpdateProfilePayload = Pick<UserProfileDto, 'fullName'> & {
-  telegramUsername?: string;
   disclaimerAccepted?: boolean;
 };
 
@@ -15,5 +14,10 @@ export const profileApi = {
     apiRequest<UserProfileDto>('/users/me/profile', {
       method: 'PATCH',
       body: payload,
+    }),
+
+  deactivateMyProfile: () =>
+    apiRequest<{ success: boolean; deactivatedAt: string }>('/users/me', {
+      method: 'DELETE',
     }),
 };

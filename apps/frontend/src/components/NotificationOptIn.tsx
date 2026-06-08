@@ -1,20 +1,22 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { Button, ButtonGroup, Card, Div, Text, Title } from '@vkontakte/vkui';
 import { requestVkNotificationsPermission } from '../vk/bridge';
 
-const SESSION_KEY = 'event-app-notifications-tip-dismissed';
+const STORAGE_KEY = 'event-app-notifications-tip-state';
+type StoredNotificationTipState = 'dismissed' | 'denied';
 
-const readDismissed = () => {
+const readStoredState = (): StoredNotificationTipState | null => {
   try {
-    return sessionStorage.getItem(SESSION_KEY) === '1';
+    const value = sessionStorage.getItem(STORAGE_KEY);
+    return value === 'dismissed' || value === 'denied' ? value : null;
   } catch {
-    return false;
+    return null;
   }
 };
 
-const rememberDismissed = () => {
+const rememberState = (value: StoredNotificationTipState) => {
   try {
-    sessionStorage.setItem(SESSION_KEY, '1');
+    sessionStorage.setItem(STORAGE_KEY, value);
   } catch {
     // Non-critical UI state only. If storage is unavailable, just show the tip again.
   }
@@ -22,16 +24,16 @@ const rememberDismissed = () => {
 
 export const NotificationOptIn = () => {
   const isVkContext = useMemo(() => window.location.search.includes('vk_app_id=') || !import.meta.env.PROD, []);
-  const [dismissed, setDismissed] = useState(readDismissed);
+  const [storedState, setStoredState] = useState<StoredNotificationTipState | null>(readStoredState);
   const [status, setStatus] = useState<'idle' | 'requesting' | 'allowed' | 'denied'>('idle');
 
-  if (!isVkContext || dismissed) {
+  if (!isVkContext || storedState) {
     return null;
   }
 
-  const close = () => {
-    rememberDismissed();
-    setDismissed(true);
+  const close = (nextState: StoredNotificationTipState = 'dismissed') => {
+    rememberState(nextState);
+    setStoredState(nextState);
   };
 
   const allowNotifications = async () => {
@@ -40,10 +42,11 @@ export const NotificationOptIn = () => {
 
     if (allowed) {
       setStatus('allowed');
-      window.setTimeout(close, 900);
+      window.setTimeout(() => close('dismissed'), 900);
       return;
     }
 
+    rememberState('denied');
     setStatus('denied');
   };
 
@@ -62,17 +65,25 @@ export const NotificationOptIn = () => {
           {status === 'allowed' && <Text className="status-badge status-badge-success">Уведомления включены.</Text>}
           {status === 'denied' && (
             <Text className="status-badge status-badge-warning">
-              Сейчас уведомления не включены. Их можно разрешить позже в настройках VK или при создании напоминания.
+              Уведомления не включены. Их можно разрешить позже в настройках VK или при создании напоминания.
             </Text>
           )}
         </div>
         <ButtonGroup mode="horizontal" className="notification-opt-in-actions">
-          <Button size="s" mode="primary" loading={status === 'requesting'} onClick={allowNotifications}>
-            Включить
-          </Button>
-          <Button size="s" mode="secondary" onClick={close}>
-            Позже
-          </Button>
+          {status !== 'denied' ? (
+            <>
+              <Button size="s" mode="primary" loading={status === 'requesting'} onClick={allowNotifications}>
+                Включить
+              </Button>
+              <Button size="s" mode="secondary" onClick={() => close('dismissed')}>
+                Позже
+              </Button>
+            </>
+          ) : (
+            <Button size="s" mode="secondary" onClick={() => close('denied')}>
+              Понятно
+            </Button>
+          )}
         </ButtonGroup>
       </Div>
     </Card>

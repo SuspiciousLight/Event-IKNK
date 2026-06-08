@@ -139,7 +139,6 @@ describe('RegistrationsService consent handling', () => {
         profileUsed: expect.objectContaining({
           id: 'profile-1',
           fullName: 'Иванов Иван',
-          telegramUsername: '@student_2026',
         }),
         consent: expect.objectContaining({
           version: validConsent.version,
@@ -150,6 +149,7 @@ describe('RegistrationsService consent handling', () => {
     expect(result.profileUsed).not.toHaveProperty('phone');
     expect(result.profileUsed).not.toHaveProperty('email');
     expect(result.profileUsed).not.toHaveProperty('vkUserId');
+    expect(result.profileUsed).not.toHaveProperty('telegramUsername');
   });
 
   it('normalizes unexpected consent metadata to a bad request', async () => {

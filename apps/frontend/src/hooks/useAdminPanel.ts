@@ -156,6 +156,28 @@ export const useAdminPanel = () => {
     selectedEventId,
   ]);
 
+  const deleteEvent = useCallback(async (eventId: string) => {
+    await adminApi.deleteEvent(eventId);
+
+    const [eventsResponse, templatesResponse] = await Promise.all([
+      adminApi.listEvents({ page: 1, pageSize: 50 }),
+      adminApi.listFormTemplates({ page: 1, pageSize: 50 }),
+    ]);
+
+    setEvents(eventsResponse.items);
+    setTemplates(templatesResponse.items);
+
+    const eventStillExists = eventsResponse.items.some((event) => event.id === selectedEventId);
+    const nextSelectedId = eventStillExists ? selectedEventId : eventsResponse.items[0]?.id || '';
+    setSelectedEventId(nextSelectedId);
+
+    if (!nextSelectedId || selectedEventId === eventId) {
+      setRegistrations([]);
+      setRegistrationsMeta(null);
+      setRegistrationsPage(1);
+    }
+  }, [selectedEventId]);
+
   const refresh = useCallback(async () => {
     if (!admin) {
       return;
@@ -208,6 +230,7 @@ export const useAdminPanel = () => {
     loadBaseData,
     loadRegistrations,
     loadLogs,
+    deleteEvent,
     updateRegistrationStatus,
     refresh,
   };

@@ -13,12 +13,6 @@ export class UpdateProfileDto {
   fullName?: string;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(64)
-  @Matches(/^@[A-Za-z0-9_]{5,32}$/)
-  telegramUsername?: string;
-
-  @IsOptional()
   @IsBoolean()
   disclaimerAccepted?: boolean;
 }

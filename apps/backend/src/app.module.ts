@@ -22,6 +22,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['../../.env', '.env'],
+      validate: validateEnvironment,
     }),
     PrismaModule,
     AuthModule,
@@ -52,3 +53,18 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
   ],
 })
 export class AppModule {}
+
+function validateEnvironment(config: Record<string, unknown>) {
+  if (config.NODE_ENV !== 'production') {
+    return config;
+  }
+
+  const requiredInProduction = ['JWT_SECRET', 'VK_APP_SECRET', 'CORS_ORIGIN', 'CSRF_TRUSTED_ORIGINS'];
+  const missing = requiredInProduction.filter((key) => !config[key]);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required production environment variables: ${missing.join(', ')}`);
+  }
+
+  return config;
+}

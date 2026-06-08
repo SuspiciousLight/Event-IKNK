@@ -99,7 +99,6 @@ export type UserProfileDto = {
   id: string;
   userId: string;
   fullName: string;
-  telegramUsername: string | null;
   disclaimerAccepted: boolean;
   disclaimerAcceptedAt: string | null;
   disclaimerVersion: string | null;
@@ -113,6 +112,8 @@ export type ProfileDisclaimerDto = {
   version: string;
   title: string;
   text: string;
+  privacyPolicyUrl?: string;
+  userAgreementUrl?: string;
 };
 
 export type ConsentDocumentDto = {
@@ -132,7 +133,7 @@ export type ConsentRecordDto = {
 };
 
 export type RegistrationCreatedDto = RegistrationListItemDto & {
-  profileUsed: Pick<UserProfileDto, 'id' | 'fullName' | 'telegramUsername'>;
+  profileUsed: Pick<UserProfileDto, 'id' | 'fullName'>;
   consent: {
     version: string;
     textHash: string;
@@ -163,7 +164,6 @@ export type AdminRegistrationRowDto = {
   userProfile: {
     fullName: string;
     vkUserId: string | null;
-    telegramUsername: string | null;
   };
 };
 

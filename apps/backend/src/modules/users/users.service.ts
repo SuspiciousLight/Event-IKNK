@@ -1,5 +1,5 @@
 ﻿import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { UserStatus } from '@prisma/client';
+import { Prisma, ReminderStatus, RegistrationStatus, SeatWaitlistStatus, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { CURRENT_PROFILE_DISCLAIMER } from './current-profile-disclaimer';
@@ -9,7 +9,6 @@ type ProfileRecord = {
   id: string;
   userId: string;
   fullName: string;
-  telegramUsername: string | null;
   disclaimerAccepted: boolean;
   disclaimerAcceptedAt: Date | null;
   disclaimerVersion: string | null;
@@ -47,7 +46,6 @@ export class UsersService {
 
   async updateMyProfile(userId: string, dto: UpdateProfileDto) {
     const fullName = dto.fullName?.trim().replace(/\s+/g, ' ');
-    const telegramUsername = dto.telegramUsername?.trim();
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -71,7 +69,6 @@ export class UsersService {
     });
 
     const nextFullName = fullName ?? existing?.fullName;
-    const nextTelegramUsername = telegramUsername ?? existing?.telegramUsername ?? null;
     const hasCurrentDisclaimer =
       existing?.disclaimerAccepted === true &&
       existing.disclaimerVersion === CURRENT_PROFILE_DISCLAIMER.version;
@@ -103,7 +100,6 @@ export class UsersService {
         data: {
           userId,
           fullName: nextFullName,
-          telegramUsername: nextTelegramUsername || null,
           ...disclaimerData,
         },
         select: this.profileSelect(),
@@ -117,7 +113,6 @@ export class UsersService {
       where: { userId },
       data: {
         ...(fullName !== undefined ? { fullName } : {}),
-        ...(telegramUsername !== undefined ? { telegramUsername } : {}),
         ...disclaimerData,
       },
       select: this.profileSelect(),
@@ -127,12 +122,133 @@ export class UsersService {
     return this.toProfileDto(updated);
   }
 
+  async deactivateMyProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        status: true,
+        deletedAt: true,
+        profile: {
+          select: {
+            id: true,
+            deletedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!user || user.deletedAt || user.status !== UserStatus.ACTIVE) {
+      throw new NotFoundException('User not found');
+    }
+
+    const deactivatedAt = new Date();
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      await tx.eventRegistration.updateMany({
+        where: {
+          userId,
+          status: RegistrationStatus.ACTIVE,
+          deletedAt: null,
+        },
+        data: {
+          status: RegistrationStatus.CANCELED,
+          activeMarker: null,
+          canceledAt: deactivatedAt,
+          canceledByUserId: userId,
+          cancelReason: 'Profile deactivated by user',
+        },
+      });
+
+      await tx.reminder.updateMany({
+        where: {
+          userId,
+          status: ReminderStatus.SCHEDULED,
+          deletedAt: null,
+        },
+        data: {
+          status: ReminderStatus.CANCELED,
+          canceledAt: deactivatedAt,
+        },
+      });
+
+      await tx.registrationAnswer.updateMany({
+        where: {
+          eventRegistration: {
+            userId,
+          },
+        },
+        data: {
+          answerText: null,
+          answerJson: Prisma.DbNull,
+        },
+      });
+
+      await tx.seatWaitlistSubscription.updateMany({
+        where: {
+          userId,
+          status: SeatWaitlistStatus.ACTIVE,
+          deletedAt: null,
+        },
+        data: {
+          status: SeatWaitlistStatus.CANCELED,
+          activeMarker: null,
+          canceledAt: deactivatedAt,
+          deletedAt: deactivatedAt,
+        },
+      });
+
+      await tx.userProfile.updateMany({
+        where: {
+          userId,
+          deletedAt: null,
+        },
+        data: {
+          fullName: 'Удаленный пользователь',
+          telegramUsername: null,
+          isActive: false,
+          deactivatedAt,
+          deletedAt: deactivatedAt,
+        },
+      });
+
+      return tx.user.update({
+        where: { id: userId },
+        data: {
+          status: UserStatus.DEACTIVATED,
+          vkUserId: null,
+          deletedAt: deactivatedAt,
+        },
+        select: {
+          id: true,
+          status: true,
+          deletedAt: true,
+        },
+      });
+    });
+
+    await this.auditService.log({
+      actorId: userId,
+      actorRole: 'USER',
+      action: 'PROFILE_DEACTIVATED',
+      targetType: 'user',
+      targetId: userId,
+      metadata: {
+        activeRecordsCanceled: true,
+      },
+    });
+
+    return {
+      success: true,
+      deactivatedAt: result.deletedAt ?? deactivatedAt,
+    };
+  }
+
   private profileSelect() {
     return {
       id: true,
       userId: true,
       fullName: true,
-      telegramUsername: true,
       disclaimerAccepted: true,
       disclaimerAcceptedAt: true,
       disclaimerVersion: true,
@@ -147,7 +263,6 @@ export class UsersService {
       id: profile.id,
       userId: profile.userId,
       fullName: profile.fullName,
-      telegramUsername: profile.telegramUsername,
       disclaimerAccepted: profile.disclaimerAccepted,
       disclaimerAcceptedAt: profile.disclaimerAcceptedAt,
       disclaimerVersion: profile.disclaimerVersion,

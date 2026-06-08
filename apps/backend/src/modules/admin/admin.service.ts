@@ -420,6 +420,22 @@ export class AdminService {
       });
     }
 
+    this.validateQuestions(
+      template.questions.map((question) => ({
+        position: question.position,
+        fieldKey: question.fieldKey,
+        label: question.label,
+        questionType: question.questionType,
+        isRequired: question.isRequired,
+        placeholder: question.placeholder ?? undefined,
+        options: Array.isArray(question.options) ? (question.options as string[]) : undefined,
+        validationRules:
+          question.validationRules && typeof question.validationRules === 'object'
+            ? (question.validationRules as Record<string, unknown>)
+            : undefined,
+      })),
+    );
+
     const result = await this.prisma.$transaction(async (tx) => {
       const event = await tx.event.create({
         data: {
@@ -503,7 +519,6 @@ export class AdminService {
         ? {
             OR: [
               { userProfile: { fullName: { contains: query.search, mode: 'insensitive' } } },
-              { userProfile: { telegramUsername: { contains: query.search, mode: 'insensitive' } } },
               { user: { vkUserId: { contains: query.search, mode: 'insensitive' } } },
             ],
           }
@@ -531,7 +546,6 @@ export class AdminService {
           userProfile: {
             select: {
               fullName: true,
-              telegramUsername: true,
             },
           },
         },
@@ -548,7 +562,6 @@ export class AdminService {
         userProfile: {
           fullName: item.userProfile.fullName,
           vkUserId: item.user.vkUserId,
-          telegramUsername: item.userProfile.telegramUsername,
         },
       })),
       meta: { page, pageSize, total },
@@ -593,7 +606,6 @@ export class AdminService {
           userProfile: {
             select: {
               fullName: true,
-              telegramUsername: true,
             },
           },
         },
@@ -684,7 +696,6 @@ export class AdminService {
           userProfile: {
             select: {
               fullName: true,
-              telegramUsername: true,
             },
           },
         },
@@ -724,7 +735,6 @@ export class AdminService {
       userProfile: {
         fullName: result.updated.userProfile.fullName,
         vkUserId: result.updated.user.vkUserId,
-        telegramUsername: result.updated.userProfile.telegramUsername,
       },
     };
   }
@@ -763,7 +773,6 @@ export class AdminService {
         userProfile: {
           select: {
             fullName: true,
-            telegramUsername: true,
           },
         },
       },
@@ -776,20 +785,16 @@ export class AdminService {
       { header: 'ФИ', key: 'fullName', width: 30 },
       { header: 'VK ID', key: 'vkUserId', width: 18 },
       { header: 'Ссылка на VK', key: 'vkProfileUrl', width: 34 },
-      { header: 'Telegram ссылка', key: 'telegramUrl', width: 34 },
       { header: 'Дата записи', key: 'registeredAt', width: 28 },
       { header: 'Статус', key: 'status', width: 14 },
     ];
 
     for (const item of registrations) {
       const vkProfileUrl = item.user.vkUserId ? `https://vk.com/id${item.user.vkUserId}` : null;
-      const telegramUserName = item.userProfile.telegramUsername?.replace(/^@/, '');
-      const telegramUrl = telegramUserName ? `https://t.me/${telegramUserName}` : null;
       worksheet.addRow({
         fullName: item.userProfile.fullName,
         vkUserId: item.user.vkUserId,
         vkProfileUrl: vkProfileUrl ? { text: vkProfileUrl, hyperlink: vkProfileUrl } : '',
-        telegramUrl: telegramUrl ? { text: telegramUrl, hyperlink: telegramUrl } : '',
         registeredAt: this.formatExportDateTime(item.registeredAt),
         status: item.status,
       });
@@ -797,7 +802,6 @@ export class AdminService {
 
     worksheet.getRow(1).font = { bold: true };
     worksheet.getColumn('vkProfileUrl').font = { color: { argb: 'FF2563EB' }, underline: true };
-    worksheet.getColumn('telegramUrl').font = { color: { argb: 'FF2563EB' }, underline: true };
 
     const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
     const safeFileName = `event-${eventId}-registrations.xlsx`;
@@ -959,6 +963,13 @@ export class AdminService {
     const keySet = new Set<string>();
 
     for (const question of questions) {
+      if (question.questionType === 'PHONE' || question.questionType === 'EMAIL') {
+        throw new BadRequestException({
+          code: 'CONTACT_QUESTION_TYPES_DISABLED',
+          message: 'Phone and email questions are disabled in the MVP because these personal data fields are not collected',
+        });
+      }
+
       if (positionSet.has(question.position)) {
         throw new BadRequestException({
           code: 'DUPLICATE_QUESTION_POSITION',

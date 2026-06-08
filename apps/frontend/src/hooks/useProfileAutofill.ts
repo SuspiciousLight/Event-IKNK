@@ -4,13 +4,11 @@ import { useCurrentProfile } from '../app/providers/CurrentProfileProvider';
 export type ProfileFormState = {
   lastName: string;
   firstName: string;
-  telegramUsername: string;
 };
 
 const EMPTY_PROFILE: ProfileFormState = {
   lastName: '',
   firstName: '',
-  telegramUsername: '',
 };
 
 const NAME_PART_REGEX = /^\p{L}[\p{L}'\u2019-]{1,63}$/u;
@@ -41,7 +39,6 @@ export const useProfileAutofill = () => {
       setProfile({
         lastName: name.lastName,
         firstName: name.firstName,
-        telegramUsername: response.telegramUsername ?? '',
       });
       return;
     }
@@ -119,6 +116,25 @@ export const useProfileAutofill = () => {
     }
   };
 
+  const deactivate = async () => {
+    setSaving(true);
+    setSaveError(null);
+    setSuccess(null);
+
+    try {
+      await currentProfile.deactivateProfile();
+      setProfile(EMPTY_PROFILE);
+      setDisclaimerAcknowledged(false);
+      setSuccess('Профиль деактивирован. Активные записи, напоминания и лист ожидания отменены.');
+      return true;
+    } catch (requestError: unknown) {
+      setSaveError(requestError instanceof Error ? requestError.message : 'Не удалось деактивировать профиль');
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return {
     profile,
     savedProfile: currentProfile.profile,
@@ -137,6 +153,7 @@ export const useProfileAutofill = () => {
     updateField,
     setDisclaimerAcknowledged,
     submit,
+    deactivate,
     reload: currentProfile.reloadProfile,
   };
 };

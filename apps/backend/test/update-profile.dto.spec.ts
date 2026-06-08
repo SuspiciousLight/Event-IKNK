@@ -10,10 +10,9 @@ const validateDto = (payload: unknown) =>
   });
 
 describe('UpdateProfileDto', () => {
-  it('accepts full name, telegram username and explicit disclaimer confirmation', async () => {
+  it('accepts full name and explicit disclaimer confirmation', async () => {
     const errors = await validateDto({
       fullName: 'Иванов Иван',
-      telegramUsername: '@student_2026',
       disclaimerAccepted: true,
     });
 
@@ -23,7 +22,6 @@ describe('UpdateProfileDto', () => {
   it('rejects phone and email because the profile no longer stores them', async () => {
     const errors = await validateDto({
       fullName: 'Иванов Иван',
-      telegramUsername: '@student_2026',
       disclaimerAccepted: true,
       phone: '+79000000000',
       email: 'student@example.com',
@@ -37,10 +35,10 @@ describe('UpdateProfileDto', () => {
     );
   });
 
-  it('rejects telegram username without @ prefix', async () => {
+  it('rejects telegram username because it is temporarily disabled in the profile contract', async () => {
     const errors = await validateDto({
       fullName: 'Иванов Иван',
-      telegramUsername: 'student_2026',
+      telegramUsername: '@student_2026',
       disclaimerAccepted: true,
     });
 
@@ -54,7 +52,6 @@ describe('UpdateProfileDto', () => {
   it('rejects patronymic or any third name part because the profile stores only surname and first name', async () => {
     const errors = await validateDto({
       fullName: 'Иванов Иван Иванович',
-      telegramUsername: '@student_2026',
       disclaimerAccepted: true,
     });
 

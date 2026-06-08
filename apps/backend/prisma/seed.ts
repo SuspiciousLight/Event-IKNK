@@ -21,7 +21,7 @@ const FORM_CAREER_ID = '33333333-3333-4333-8333-333333333333';
 const EVENT_RESUME_ID = '44444444-4444-4444-8444-444444444444';
 const FORM_RESUME_ID = '55555555-5555-4555-8555-555555555555';
 
-const CURRENT_PROFILE_DISCLAIMER_VERSION = 'v1.0-2026-06-05';
+const CURRENT_PROFILE_DISCLAIMER_VERSION = 'v1.1-2026-06-09';
 
 type SeedQuestion = {
   position: number;
@@ -33,8 +33,8 @@ type SeedQuestion = {
   options?: string[];
 };
 
-// The profile already contains full name + Telegram username, so demo forms ask
-// only event-specific information.
+// The profile already contains surname + first name, so demo forms ask only
+// event-specific information.
 const DEMO_QUESTIONS: SeedQuestion[] = [
   { position: 1, fieldKey: 'course', label: 'Курс', questionType: QuestionType.COURSE, isRequired: true, options: ['1 курс', '2 курс', '3 курс', '4 курс', 'Магистратура'] },
   { position: 2, fieldKey: 'faculty', label: 'Факультет', questionType: QuestionType.SELECT, isRequired: true, options: ['ИТ', 'Экономика', 'Юриспруденция', 'Лингвистика'] },
@@ -71,7 +71,6 @@ async function seedAdmin() {
     where: { userId: user.id },
     update: {
       fullName: adminFullName,
-      telegramUsername: '@admin_polytech',
       disclaimerAccepted: true,
       disclaimerAcceptedAt: new Date(),
       disclaimerVersion: CURRENT_PROFILE_DISCLAIMER_VERSION,
@@ -79,7 +78,6 @@ async function seedAdmin() {
     create: {
       userId: user.id,
       fullName: adminFullName,
-      telegramUsername: '@admin_polytech',
       disclaimerAccepted: true,
       disclaimerAcceptedAt: new Date(),
       disclaimerVersion: CURRENT_PROFILE_DISCLAIMER_VERSION,

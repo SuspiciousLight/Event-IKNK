@@ -22,7 +22,7 @@ const TABS: Array<{ id: AdminTab; label: string }> = [
   { id: 'overview', label: 'Обзор' },
   { id: 'events', label: 'Мероприятия' },
   { id: 'forms', label: 'Формы' },
-  { id: 'templates', label: 'По шаблону' },
+  { id: 'templates', label: 'Шаблоны' },
   { id: 'registrations', label: 'Участники' },
   { id: 'campaigns', label: 'Рассылка' },
   { id: 'audit', label: 'Журнал' },
@@ -34,6 +34,7 @@ export const AdminPanelPage = () => {
   const { logoutAdmin } = useAdminAuth();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [tabHistory, setTabHistory] = useState<AdminTab[]>([]);
   const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
   useRegisterRefresh(panel.refresh, Boolean(panel.admin));
@@ -61,6 +62,26 @@ export const AdminPanelPage = () => {
         ? 'Идёт сейчас'
         : 'Запланировано'
     : 'Выберите мероприятие';
+  const previousTab = tabHistory[tabHistory.length - 1];
+  const previousTabLabel = TABS.find((tab) => tab.id === previousTab)?.label;
+
+  const changeAdminTab = (nextTab: AdminTab) => {
+    if (nextTab === activeTab) {
+      return;
+    }
+
+    setTabHistory((prev) => [...prev, activeTab].slice(-8));
+    setActiveTab(nextTab);
+  };
+
+  const goBackInsideAdmin = () => {
+    if (!previousTab) {
+      return;
+    }
+
+    setActiveTab(previousTab);
+    setTabHistory((prev) => prev.slice(0, -1));
+  };
 
   const logout = async () => {
     try {
@@ -87,9 +108,7 @@ export const AdminPanelPage = () => {
     }
 
     try {
-      await adminApi.deleteEvent(selectedEvent.id);
-      panel.setSelectedEventId('');
-      await panel.loadBaseData();
+      await panel.deleteEvent(selectedEvent.id);
       await panel.loadLogs();
       showSuccess('Мероприятие удалено.');
     } catch (requestError: unknown) {
@@ -138,28 +157,34 @@ export const AdminPanelPage = () => {
         eyebrow="Админ-панель"
         title="Управление мероприятиями"
         subtitle="Создавайте мероприятия и формы, смотрите участников, выгружайте Excel и запускайте VK-уведомления."
-        action={(
-          <div className="form-action-row">
-            <Button mode="secondary" onClick={() => navigate('/events')}>Назад</Button>
-            <Button mode="secondary" onClick={logout}>Выйти</Button>
-          </div>
-        )}
+        action={previousTab ? (
+          <Button mode="secondary" onClick={goBackInsideAdmin}>
+            Назад{previousTabLabel ? ` к «${previousTabLabel}»` : ''}
+          </Button>
+        ) : undefined}
       />
 
       <StateBlock loading={panel.loading} error={panel.error}>
         <div className="admin-shell">
           <aside className="admin-sidebar">
-            {TABS.map((tab) => (
-              <Button
-                key={tab.id}
-                className="admin-sidebar-button"
-                mode={activeTab === tab.id ? 'primary' : 'secondary'}
-                size="s"
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
+            <div className="admin-sidebar-tabs">
+              {TABS.map((tab) => (
+                <Button
+                  key={tab.id}
+                  className="admin-sidebar-button"
+                  mode={activeTab === tab.id ? 'primary' : 'secondary'}
+                  size="s"
+                  onClick={() => changeAdminTab(tab.id)}
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+            <div className="admin-sidebar-footer">
+              <Button mode="secondary" appearance="negative" stretched onClick={logout}>
+                Выйти из админки
               </Button>
-            ))}
+            </div>
           </aside>
 
           <div className="admin-main grid-stack">
@@ -290,6 +315,29 @@ export const AdminPanelPage = () => {
                     </div>
                   </Div>
                 </Card>
+                {panel.templates.length > 0 && (
+                  <Card mode="shadow" className="admin-card">
+                    <Div className="grid-stack">
+                      <div>
+                        <Text className="eyebrow">Дополнительно</Text>
+                        <Title level="3">Быстро создать мероприятие с шаблонной формой</Title>
+                        <Text className="muted-text">
+                          Это ускоренный сценарий: мероприятие и форма будут опубликованы сразу.
+                        </Text>
+                      </div>
+                      <AdminEventFromTemplateForm
+                        templates={panel.templates}
+                        onDone={async (eventId) => {
+                          panel.setSelectedEventId(eventId);
+                          await panel.loadBaseData();
+                          await panel.loadLogs();
+                          showSuccess('Мероприятие создано по шаблону.');
+                        }}
+                        onError={showError}
+                      />
+                    </Div>
+                  </Card>
+                )}
               </div>
             )}
 
@@ -309,6 +357,7 @@ export const AdminPanelPage = () => {
                 <AdminFormBuilder
                   selectedEventId={panel.selectedEventId}
                   templates={panel.templates}
+                  mode="form"
                   onDone={async () => {
                     await panel.loadBaseData();
                     await panel.loadLogs();
@@ -320,40 +369,44 @@ export const AdminPanelPage = () => {
             )}
 
             {activeTab === 'templates' && (
-              <Card mode="shadow" className="admin-card">
-                <Div className="grid-stack">
-                  <div>
-                    <Text className="eyebrow">Быстрое создание</Text>
-                    <Title level="3">Мероприятие по шаблону формы</Title>
-                    <Text className="muted-text">Выберите сохранённый шаблон и сразу получите опубликованную форму.</Text>
-                  </div>
-                  <div className="admin-table">
-                    {panel.templates.length === 0 ? (
-                      <div className="admin-table-row">
-                        <Text weight="2">Шаблонов пока нет</Text>
-                        <Text className="muted-text">Создайте шаблон во вкладке «Формы», чтобы переиспользовать набор вопросов.</Text>
-                      </div>
-                    ) : (
-                      panel.templates.map((template) => (
-                        <div className="admin-table-row" key={template.id}>
-                          <Text weight="2">{template.name} v{template.version}</Text>
-                          <Text className="muted-text">{template.description || 'Без описания'} · вопросов: {template.questions.length}</Text>
+              <div className="grid-stack">
+                <Card mode="shadow" className="admin-card">
+                  <Div className="grid-stack">
+                    <div>
+                      <Text className="eyebrow">Шаблоны</Text>
+                      <Title level="3">Сохранённые заготовки</Title>
+                      <Text className="muted-text">
+                        Шаблон — это набор вопросов. Он сам ничего не публикует. Чтобы использовать его, откройте вкладку «Формы» и выберите шаблон.
+                      </Text>
+                    </div>
+                    <div className="admin-table">
+                      {panel.templates.length === 0 ? (
+                        <div className="admin-table-row">
+                          <Text weight="2">Шаблонов пока нет</Text>
+                          <Text className="muted-text">Создайте первый шаблон ниже, чтобы переиспользовать набор вопросов.</Text>
                         </div>
-                      ))
-                    )}
-                  </div>
-                  <AdminEventFromTemplateForm
-                    templates={panel.templates}
-                    onDone={async (eventId) => {
-                      panel.setSelectedEventId(eventId);
-                      await panel.loadBaseData();
-                      await panel.loadLogs();
-                      showSuccess('Мероприятие создано по шаблону.');
-                    }}
-                    onError={showError}
-                  />
-                </Div>
-              </Card>
+                      ) : (
+                        panel.templates.map((template) => (
+                          <div className="admin-table-row" key={template.id}>
+                            <Text weight="2">{template.name} v{template.version}</Text>
+                            <Text className="muted-text">{template.description || 'Без описания'} · вопросов: {template.questions.length}</Text>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Div>
+                </Card>
+                <AdminFormBuilder
+                  templates={panel.templates}
+                  mode="template"
+                  onDone={async () => {
+                    await panel.loadBaseData();
+                    await panel.loadLogs();
+                    showSuccess('Шаблон сохранён.');
+                  }}
+                  onError={showError}
+                />
+              </div>
             )}
 
             {activeTab === 'registrations' && (

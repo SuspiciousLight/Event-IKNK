@@ -79,13 +79,13 @@ export const AdminQuestionBuilder = ({ questions, onChange }: AdminQuestionBuild
           <div className="admin-question-row" key={`${question.position}-${index}`}>
             <div className="event-card-top">
               <Text weight="2">Вопрос {index + 1}</Text>
-              <Text className="muted-text">position: {index + 1}</Text>
+              <Text className="muted-text">Порядок: {index + 1}</Text>
             </div>
             <FormItem top="Текст вопроса">
               <Input value={question.label} onChange={(event) => updateQuestion(index, { label: event.target.value })} placeholder="Например: Ваш факультет" />
             </FormItem>
             <div className="admin-form-columns">
-              <FormItem top="Ключ поля" bottom="Только латиница, цифры и подчёркивание">
+              <FormItem top="Код ответа" bottom="Нужен системе для сохранения ответа и выгрузки. Можно оставить как есть: латиница, цифры и подчёркивание.">
                 <Input value={question.fieldKey} onChange={(event) => updateQuestion(index, { fieldKey: event.target.value })} placeholder="faculty" />
               </FormItem>
               <FormItem top="Тип">

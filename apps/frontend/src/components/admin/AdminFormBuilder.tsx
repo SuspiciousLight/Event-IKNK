@@ -5,10 +5,11 @@ import { AdminFormTemplateDto } from '../../api/contracts';
 import { AdminQuestionBuilder, AdminQuestionDraft, createInitialQuestion, normalizeQuestions } from './AdminQuestionBuilder';
 
 type AdminFormBuilderProps = {
-  selectedEventId: string;
+  selectedEventId?: string;
   templates: AdminFormTemplateDto[];
   onDone: () => void;
   onError: (message: string) => void;
+  mode?: 'form' | 'template' | 'both';
 };
 
 const TRANSLIT: Record<string, string> = {
@@ -41,7 +42,7 @@ const validateBuilderQuestions = (questions: AdminQuestionDraft[]): string | nul
       return `Заполните текст вопроса №${index + 1}.`;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(question.fieldKey.trim())) {
-      return `Ключ поля вопроса №${index + 1}: только латиница, цифры и подчёркивание.`;
+      return `Код ответа вопроса №${index + 1}: только латиница, цифры и подчёркивание.`;
     }
     const needsOptions =
       question.questionType === 'SELECT' || question.questionType === 'CHECKBOX' || question.questionType === 'COURSE';
@@ -65,7 +66,7 @@ const fromTemplate = (template: AdminFormTemplateDto): AdminQuestionDraft[] =>
     optionsText: Array.isArray(question.options) ? question.options.join('\n') : '',
   }));
 
-export const AdminFormBuilder = ({ selectedEventId, templates, onDone, onError }: AdminFormBuilderProps) => {
+export const AdminFormBuilder = ({ selectedEventId = '', templates, onDone, onError, mode = 'both' }: AdminFormBuilderProps) => {
   const [questions, setQuestions] = useState<AdminQuestionDraft[]>([createInitialQuestion()]);
   const [sourceTemplateId, setSourceTemplateId] = useState('');
   const [templateCode, setTemplateCode] = useState('');
@@ -139,52 +140,73 @@ export const AdminFormBuilder = ({ selectedEventId, templates, onDone, onError }
   };
 
   return (
-    <form onSubmit={createForm} className="admin-form-grid">
-      <Card mode="shadow" className="admin-card">
-        <Div className="grid-stack">
-          <div>
-            <Text className="eyebrow">Форма регистрации</Text>
-            <Title level="3">Вопросы для студентов</Title>
-            <Text className="muted-text">Порядок вопросов сохраняется. Студенты увидят их в таком же порядке при записи.</Text>
-          </div>
-          <FormItem top="Использовать шаблон">
-            <Select
-              value={sourceTemplateId}
-              options={[
-                { label: 'Без шаблона', value: '' },
-                ...templates.map((template) => ({ label: `${template.name} v${template.version}`, value: template.id })),
-              ]}
-              onChange={(event) => applyTemplate(event.target.value)}
-            />
-          </FormItem>
-          <AdminQuestionBuilder questions={questions} onChange={setQuestions} />
-          <Button type="submit" loading={savingForm} disabled={!selectedEventId}>Опубликовать форму для мероприятия</Button>
-        </Div>
-      </Card>
+    <div className="admin-form-grid">
+      {mode !== 'template' && (
+        <form onSubmit={createForm} className="admin-form-grid">
+          <Card mode="shadow" className="admin-card">
+            <Div className="grid-stack">
+              <div>
+                <Text className="eyebrow">Шаг 2 · Форма</Text>
+                <Title level="3">Форма для выбранного мероприятия</Title>
+                <Text className="muted-text">
+                  Форма привязывается к конкретному мероприятию. Студенты увидят вопросы при записи.
+                </Text>
+              </div>
+              <FormItem top="Взять вопросы из шаблона">
+                <Select
+                  value={sourceTemplateId}
+                  options={[
+                    { label: 'Без шаблона', value: '' },
+                    ...templates.map((template) => ({ label: `${template.name} v${template.version}`, value: template.id })),
+                  ]}
+                  onChange={(event) => applyTemplate(event.target.value)}
+                />
+              </FormItem>
+              <AdminQuestionBuilder questions={questions} onChange={setQuestions} />
+              <Button type="submit" loading={savingForm} disabled={!selectedEventId}>Опубликовать форму для мероприятия</Button>
+            </Div>
+          </Card>
+        </form>
+      )}
 
-      <Card mode="shadow" className="admin-card">
-        <Div className="admin-form-grid">
-          <div>
-            <Text className="eyebrow">Переиспользование</Text>
-            <Title level="3">Сохранить как шаблон</Title>
-            <Text className="muted-text">Шаблон можно применить к новым мероприятиям без повторного создания вопросов.</Text>
-          </div>
-          <div className="admin-form-columns">
-            <FormItem top="Название шаблона">
-              <Input value={templateName} onChange={(event) => setTemplateName(event.target.value)} placeholder="Базовая форма" />
+      {mode !== 'form' && (
+        <Card mode="shadow" className="admin-card">
+          <Div className="admin-form-grid">
+            <div>
+              <Text className="eyebrow">Шаблон</Text>
+              <Title level="3">Заготовка вопросов</Title>
+              <Text className="muted-text">
+                Шаблон ничего не публикует у студентов. Это только заготовка, которую потом можно выбрать во вкладке «Формы».
+              </Text>
+            </div>
+            <FormItem top="Взять за основу существующий шаблон">
+              <Select
+                value={sourceTemplateId}
+                options={[
+                  { label: 'Новый шаблон с нуля', value: '' },
+                  ...templates.map((template) => ({ label: `${template.name} v${template.version}`, value: template.id })),
+                ]}
+                onChange={(event) => applyTemplate(event.target.value)}
+              />
             </FormItem>
-            <FormItem top="Код шаблона" bottom="Необязательно — создадим автоматически из названия">
-              <Input value={templateCode} onChange={(event) => setTemplateCode(event.target.value)} placeholder="career_day_base" />
+            <AdminQuestionBuilder questions={questions} onChange={setQuestions} />
+            <div className="admin-form-columns">
+              <FormItem top="Название шаблона">
+                <Input value={templateName} onChange={(event) => setTemplateName(event.target.value)} placeholder="Базовая форма" />
+              </FormItem>
+              <FormItem top="Код шаблона" bottom="Необязательно — создадим автоматически из названия">
+                <Input value={templateCode} onChange={(event) => setTemplateCode(event.target.value)} placeholder="career_day_base" />
+              </FormItem>
+            </div>
+            <FormItem top="Описание шаблона">
+              <Textarea value={templateDescription} onChange={(event) => setTemplateDescription(event.target.value)} />
             </FormItem>
-          </div>
-          <FormItem top="Описание шаблона">
-            <Textarea value={templateDescription} onChange={(event) => setTemplateDescription(event.target.value)} />
-          </FormItem>
-          <Button type="button" mode="secondary" loading={savingTemplate} disabled={!templateName.trim()} onClick={saveTemplate}>
-            Сохранить шаблон
-          </Button>
-        </Div>
-      </Card>
-    </form>
+            <Button type="button" mode="secondary" loading={savingTemplate} disabled={!templateName.trim()} onClick={saveTemplate}>
+              Сохранить шаблон
+            </Button>
+          </Div>
+        </Card>
+      )}
+    </div>
   );
 };

@@ -1,4 +1,4 @@
-import { FormEvent, useCallback } from 'react';
+﻿import { FormEvent, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Div, FormItem, Group, Input, Text, Title } from '@vkontakte/vkui';
 import { useAdminAuth } from '../app/providers/AdminAuthProvider';
@@ -12,6 +12,14 @@ const getInitials = (firstName?: string, lastName?: string) => {
   const first = firstName?.trim().charAt(0) ?? '';
   const last = lastName?.trim().charAt(0) ?? '';
   return `${last}${first}`.trim().toUpperCase() || 'ST';
+};
+
+const openDocument = (url?: string) => {
+  if (!url) {
+    return;
+  }
+
+  window.open(new URL(url, window.location.origin).toString(), '_blank', 'noopener,noreferrer');
 };
 
 export const ProfileAutofillPage = () => {
@@ -31,6 +39,23 @@ export const ProfileAutofillPage = () => {
       showSuccess('Профиль сохранён.');
     } else {
       showError('Не получилось сохранить профиль. Проверьте поля и попробуйте снова.');
+    }
+  };
+
+  const deactivateProfile = async () => {
+    const confirmed = window.confirm(
+      'Деактивировать профиль? Активные записи, напоминания и лист ожидания будут отменены. ФИ будет удалено из профиля.',
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const ok = await profile.deactivate();
+    if (ok) {
+      showSuccess('Профиль деактивирован. Данные профиля больше не используются.');
+    } else {
+      showError('Не получилось деактивировать профиль. Попробуйте ещё раз.');
     }
   };
 
@@ -56,8 +81,8 @@ export const ProfileAutofillPage = () => {
                   <Title level="3">{profile.hasProfile ? 'Профиль заполнен' : 'Профиль ещё не заполнен'}</Title>
                   <Text className="muted-text">
                     {profile.hasProfile
-                      ? 'Можно записываться быстрее: данные уже готовы.'
-                      : 'Заполните поля ниже, чтобы регистрация не останавливалась на последнем шаге.'}
+                      ? 'Данные будут автоматически подставляться в новые регистрации.'
+                      : 'Заполните фамилию и имя, чтобы регистрация на мероприятия проходила быстрее.'}
                   </Text>
                 </div>
                 <StatusBadge tone={profile.completion === 100 ? 'success' : 'warning'}>{profile.completion}%</StatusBadge>
@@ -69,7 +94,6 @@ export const ProfileAutofillPage = () => {
                   <div className="meta-tile"><InfoRow label="Обновлено" value={formatDateTime(profile.savedProfile.updatedAt)} /></div>
                 </div>
               )}
-
             </Div>
           </Card>
 
@@ -88,12 +112,20 @@ export const ProfileAutofillPage = () => {
                 <Card mode="shadow" className="soft-card">
                   <Div className="grid-stack">
                     <div>
-                      <Text className="eyebrow">Дисклеймер профиля</Text>
+                      <Text className="eyebrow">Информация о данных</Text>
                       <Title level="3">{profile.disclaimer?.title ?? 'Как используются данные'}</Title>
                     </div>
                     <Text className="muted-text" style={{ whiteSpace: 'pre-line' }}>
-                      {profile.disclaimer?.text ?? 'Данные используются только для регистрации на мероприятия и организационной связи.'}
+                      {profile.disclaimer?.text ?? 'Данные используются только для регистрации на мероприятия и организационных уведомлений.'}
                     </Text>
+                    <div className="form-action-row">
+                      <Button type="button" mode="secondary" onClick={() => openDocument(profile.disclaimer?.privacyPolicyUrl)}>
+                        Политика конфиденциальности
+                      </Button>
+                      <Button type="button" mode="secondary" onClick={() => openDocument(profile.disclaimer?.userAgreementUrl)}>
+                        Пользовательское соглашение
+                      </Button>
+                    </div>
                     {profile.requiresDisclaimer ? (
                       <div className="form-action-row">
                         <Button
@@ -138,6 +170,23 @@ export const ProfileAutofillPage = () => {
               )}
             </Div>
           </Card>
+
+          {profile.hasProfile && (
+            <Card mode="shadow" className="profile-card danger-zone">
+              <Div className="grid-stack">
+                <div>
+                  <Text className="eyebrow">Управление данными</Text>
+                  <Title level="3">Деактивация профиля</Title>
+                  <Text className="muted-text">
+                    Если профиль больше не нужен, можно деактивировать его. Активные записи, напоминания и лист ожидания будут отменены, а ФИ будет удалено из профиля.
+                  </Text>
+                </div>
+                <Button mode="secondary" appearance="negative" loading={profile.saving} onClick={deactivateProfile}>
+                  Деактивировать профиль
+                </Button>
+              </Div>
+            </Card>
+          )}
 
           <div className="admin-entry">
             <button

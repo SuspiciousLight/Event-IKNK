@@ -13,6 +13,7 @@ type CurrentProfileContextValue = {
   reloadProfile: () => Promise<UserProfileDto | null>;
   reloadDisclaimer: () => Promise<ProfileDisclaimerDto | null>;
   saveProfile: (payload: UpdateProfilePayload) => Promise<UserProfileDto>;
+  deactivateProfile: () => Promise<{ success: boolean; deactivatedAt: string }>;
 };
 
 const CurrentProfileContext = createContext<CurrentProfileContextValue | null>(null);
@@ -73,6 +74,13 @@ export const CurrentProfileProvider = ({ children }: { children: ReactNode }) =>
     return response;
   }, []);
 
+  const deactivateProfile = useCallback(async () => {
+    const response = await profileApi.deactivateMyProfile();
+    setProfile(null);
+    setError(null);
+    return response;
+  }, []);
+
   const value = useMemo<CurrentProfileContextValue>(
     () => ({
       profile,
@@ -84,8 +92,9 @@ export const CurrentProfileProvider = ({ children }: { children: ReactNode }) =>
       reloadProfile,
       reloadDisclaimer,
       saveProfile,
+      deactivateProfile,
     }),
-    [disclaimer, disclaimerLoading, error, loading, profile, reloadDisclaimer, reloadProfile, saveProfile],
+    [deactivateProfile, disclaimer, disclaimerLoading, error, loading, profile, reloadDisclaimer, reloadProfile, saveProfile],
   );
 
   return <CurrentProfileContext.Provider value={value}>{children}</CurrentProfileContext.Provider>;

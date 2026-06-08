@@ -15,8 +15,6 @@ import {
 enum QuestionTypeDto {
   TEXT = 'TEXT',
   TEXTAREA = 'TEXTAREA',
-  PHONE = 'PHONE',
-  EMAIL = 'EMAIL',
   SELECT = 'SELECT',
   CHECKBOX = 'CHECKBOX',
   COURSE = 'COURSE',

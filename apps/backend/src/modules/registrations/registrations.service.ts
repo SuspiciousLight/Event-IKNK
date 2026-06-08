@@ -303,7 +303,6 @@ export class RegistrationsService {
       profileUsed: {
         id: user.profile.id,
         fullName: user.profile.fullName,
-        telegramUsername: user.profile.telegramUsername,
       },
       consent: {
         version: consent.consentVersion,

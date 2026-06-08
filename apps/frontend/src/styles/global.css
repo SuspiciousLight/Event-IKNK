@@ -816,6 +816,13 @@ a {
   white-space: normal;
 }
 
+.danger-zone {
+  border-color: rgba(255, 107, 122, 0.28);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 107, 122, 0.13), transparent 34%),
+    rgba(255, 107, 122, 0.06);
+}
+
 /* Inconspicuous admin entry: a quiet, muted link the average student ignores. */
 .admin-entry {
   display: flex;
@@ -934,15 +941,28 @@ a {
   top: 86px;
   align-self: start;
   display: grid;
+  grid-template-rows: auto 1fr auto;
   gap: 8px;
+  min-height: min(640px, calc(100vh - 120px));
   padding: 12px;
   border-radius: var(--app-radius);
   border: 1px solid var(--app-border);
   background: rgba(255, 255, 255, 0.045);
 }
 
+.admin-sidebar-tabs {
+  display: grid;
+  gap: 8px;
+}
+
 .admin-sidebar-button {
   justify-content: flex-start;
+}
+
+.admin-sidebar-footer {
+  align-self: end;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border);
 }
 
 .admin-main {
@@ -1092,7 +1112,18 @@ a {
 
   .admin-sidebar {
     position: static;
+    min-height: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+  }
+
+  .admin-sidebar-tabs {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-sidebar-footer {
+    grid-column: 1 / -1;
   }
 
   .inline-actions,
