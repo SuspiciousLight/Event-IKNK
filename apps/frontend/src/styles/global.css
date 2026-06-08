@@ -800,6 +800,22 @@ a {
   margin: 14px 0;
 }
 
+.profile-feedback-stack {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-feedback-message {
+  width: 100%;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  border-radius: 18px;
+  padding: 10px 12px;
+  line-height: 1.35;
+  white-space: normal;
+}
+
 /* Inconspicuous admin entry: a quiet, muted link the average student ignores. */
 .admin-entry {
   display: flex;

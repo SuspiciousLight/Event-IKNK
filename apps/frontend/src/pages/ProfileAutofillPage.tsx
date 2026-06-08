@@ -122,8 +122,20 @@ export const ProfileAutofillPage = () => {
                   </Button>
                 </div>
               </form>
-              {profile.saveError && <Text className="status-badge status-badge-danger">{profile.saveError}</Text>}
-              {profile.success && <Text className="status-badge status-badge-success">{profile.success}</Text>}
+              {(profile.saveError || profile.success) && (
+                <div className="profile-feedback-stack" role="status" aria-live="polite">
+                  {profile.saveError && (
+                    <Text className="status-badge status-badge-danger profile-feedback-message">
+                      {profile.saveError}
+                    </Text>
+                  )}
+                  {profile.success && (
+                    <Text className="status-badge status-badge-success profile-feedback-message">
+                      {profile.success}
+                    </Text>
+                  )}
+                </div>
+              )}
             </Div>
           </Card>
 
