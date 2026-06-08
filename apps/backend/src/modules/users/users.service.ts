@@ -71,15 +71,15 @@ export class UsersService {
     });
 
     const nextFullName = fullName ?? existing?.fullName;
-    const nextTelegramUsername = telegramUsername ?? existing?.telegramUsername ?? undefined;
+    const nextTelegramUsername = telegramUsername ?? existing?.telegramUsername ?? null;
     const hasCurrentDisclaimer =
       existing?.disclaimerAccepted === true &&
       existing.disclaimerVersion === CURRENT_PROFILE_DISCLAIMER.version;
 
-    if (!nextFullName || !nextTelegramUsername) {
+    if (!nextFullName) {
       throw new BadRequestException({
         code: 'PROFILE_FIELDS_REQUIRED',
-        message: 'Surname, first name and telegramUsername are required for profile',
+        message: 'Surname and first name are required for profile',
       });
     }
 
@@ -103,7 +103,7 @@ export class UsersService {
         data: {
           userId,
           fullName: nextFullName,
-          telegramUsername: nextTelegramUsername,
+          telegramUsername: nextTelegramUsername || null,
           ...disclaimerData,
         },
         select: this.profileSelect(),

@@ -88,7 +88,7 @@ export const AdminEventForm = ({ onCreated, onError }: AdminEventFormProps) => {
         <FormItem top="Место">
           <Input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Аудитория, корпус или онлайн" />
         </FormItem>
-        <FormItem top="Вместимость">
+        <FormItem top="Вместимость" bottom="Оставьте поле пустым, если лимит участников не ограничен.">
           <Input type="number" min={1} value={capacity} onChange={(event) => setCapacity(event.target.value)} placeholder="Без ограничения" />
         </FormItem>
       </div>

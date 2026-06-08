@@ -123,13 +123,27 @@ export const AdminPanelPage = () => {
     }
   };
 
+  const changeRegistrationStatus = async (registrationId: string, status: 'ACTIVE' | 'CANCELED') => {
+    const ok = await panel.updateRegistrationStatus(registrationId, status);
+    if (ok) {
+      showSuccess(status === 'ACTIVE' ? 'Статус изменён: активна.' : 'Статус изменён: отменена.');
+    } else {
+      showError('Не удалось изменить статус участника.');
+    }
+  };
+
   return (
     <Group className="page-section" mode="plain">
       <PageHero
         eyebrow="Админ-панель"
         title="Управление мероприятиями"
         subtitle="Создавайте мероприятия и формы, смотрите участников, выгружайте Excel и запускайте VK-уведомления."
-        action={<Button mode="secondary" onClick={logout}>Выйти</Button>}
+        action={(
+          <div className="form-action-row">
+            <Button mode="secondary" onClick={() => navigate('/events')}>Назад</Button>
+            <Button mode="secondary" onClick={logout}>Выйти</Button>
+          </div>
+        )}
       />
 
       <StateBlock loading={panel.loading} error={panel.error}>
@@ -190,14 +204,14 @@ export const AdminPanelPage = () => {
 
             {activeTab === 'overview' && (
               <div className="grid-stack">
-                <div className="meta-grid">
+                <div className="meta-grid admin-overview-global-stats">
                   <Card mode="shadow" className="admin-card"><Div><InfoRow label="Всего мероприятий" value={panel.events.length} /></Div></Card>
                   <Card mode="shadow" className="admin-card"><Div><InfoRow label="Опубликовано" value={activeEvents} /></Div></Card>
                   <Card mode="shadow" className="admin-card"><Div><InfoRow label="Активных записей" value={totalRegistrations} /></Div></Card>
                   <Card mode="shadow" className="admin-card"><Div><InfoRow label="Шаблонов" value={panel.templates.length} /></Div></Card>
                 </div>
 
-                <Card mode="shadow" className="admin-card">
+                <Card mode="shadow" className="admin-card admin-overview-event-stats">
                   <Div className="grid-stack">
                     <div>
                       <Text className="eyebrow">Статистика мероприятия</Text>
@@ -236,7 +250,7 @@ export const AdminPanelPage = () => {
 
             {activeTab === 'events' && (
               <div className="grid-stack">
-                <Card mode="shadow" className="admin-card">
+                <Card mode="shadow" className="admin-card admin-events-create">
                   <Div className="grid-stack">
                     <div>
                       <Text className="eyebrow">Создание</Text>
@@ -252,7 +266,7 @@ export const AdminPanelPage = () => {
                     />
                   </Div>
                 </Card>
-                <Card mode="shadow" className="admin-card">
+                <Card mode="shadow" className="admin-card admin-events-list">
                   <Div className="grid-stack">
                     <Title level="3">Список мероприятий</Title>
                     <div className="admin-table">
@@ -280,16 +294,29 @@ export const AdminPanelPage = () => {
             )}
 
             {activeTab === 'forms' && (
-              <AdminFormBuilder
-                selectedEventId={panel.selectedEventId}
-                templates={panel.templates}
-                onDone={async () => {
-                  await panel.loadBaseData();
-                  await panel.loadLogs();
-                  showSuccess('Форма или шаблон сохранены.');
-                }}
-                onError={showError}
-              />
+              <div className="grid-stack">
+                <Card mode="shadow" className="admin-card">
+                  <Div className="grid-stack">
+                    <div>
+                      <Text className="eyebrow">Формы</Text>
+                      <Title level="3">Конструктор формы регистрации</Title>
+                      <Text className="muted-text">
+                        Выберите мероприятие в верхнем блоке, добавьте вопросы в нужном порядке и сохраните форму. Если этот набор вопросов пригодится позже, сохраните его как шаблон.
+                      </Text>
+                    </div>
+                  </Div>
+                </Card>
+                <AdminFormBuilder
+                  selectedEventId={panel.selectedEventId}
+                  templates={panel.templates}
+                  onDone={async () => {
+                    await panel.loadBaseData();
+                    await panel.loadLogs();
+                    showSuccess('Форма или шаблон сохранены.');
+                  }}
+                  onError={showError}
+                />
+              </div>
             )}
 
             {activeTab === 'templates' && (
@@ -299,6 +326,21 @@ export const AdminPanelPage = () => {
                     <Text className="eyebrow">Быстрое создание</Text>
                     <Title level="3">Мероприятие по шаблону формы</Title>
                     <Text className="muted-text">Выберите сохранённый шаблон и сразу получите опубликованную форму.</Text>
+                  </div>
+                  <div className="admin-table">
+                    {panel.templates.length === 0 ? (
+                      <div className="admin-table-row">
+                        <Text weight="2">Шаблонов пока нет</Text>
+                        <Text className="muted-text">Создайте шаблон во вкладке «Формы», чтобы переиспользовать набор вопросов.</Text>
+                      </div>
+                    ) : (
+                      panel.templates.map((template) => (
+                        <div className="admin-table-row" key={template.id}>
+                          <Text weight="2">{template.name} v{template.version}</Text>
+                          <Text className="muted-text">{template.description || 'Без описания'} · вопросов: {template.questions.length}</Text>
+                        </div>
+                      ))
+                    )}
                   </div>
                   <AdminEventFromTemplateForm
                     templates={panel.templates}
@@ -319,10 +361,10 @@ export const AdminPanelPage = () => {
                 <Div className="grid-stack">
                   <div className="admin-filter-row">
                     <FormItem top="Поиск">
-                      <Input value={panel.registrationsSearch} placeholder="ФИ, VK ID или Telegram" onChange={(event) => panel.setRegistrationsSearch(event.target.value)} />
+                      <Input value={panel.registrationsSearch} placeholder="ФИ или VK ID" onChange={(event) => panel.setRegistrationsSearch(event.target.value)} />
                     </FormItem>
                     <Checkbox checked={panel.includeCanceled} onChange={(event) => panel.setIncludeCanceled(event.currentTarget.checked)}>
-                      Показывать отменённые
+                      Только отменённые
                     </Checkbox>
                     <Button onClick={() => panel.loadRegistrations(1)}>Применить</Button>
                     <Button mode="secondary" disabled={isMobileDevice} onClick={exportExcel}>
@@ -341,6 +383,13 @@ export const AdminPanelPage = () => {
                     error={panel.registrationsError}
                     onPrevPage={() => panel.loadRegistrations(Math.max(1, panel.registrationsPage - 1))}
                     onNextPage={() => panel.loadRegistrations(panel.registrationsPage + 1)}
+                    onStatusChange={changeRegistrationStatus}
+                    statusBusyId={panel.statusBusyId}
+                    emptyText={
+                      panel.includeCanceled
+                        ? 'Отменённых регистраций по выбранному мероприятию нет.'
+                        : 'Когда студенты начнут записываться, они появятся в этом списке.'
+                    }
                   />
                 </Div>
               </Card>

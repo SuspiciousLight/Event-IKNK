@@ -6,7 +6,7 @@ import { InfoRow, PageHero, StateBlock, StatusBadge } from '../components/common
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
 import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { useRegistrationWizard } from '../hooks/useRegistrationWizard';
-import { formatDateRange } from '../utils/format';
+import { formatDateRange, formatDateTime } from '../utils/format';
 
 export const RegistrationWizardPage = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -44,14 +44,11 @@ export const RegistrationWizardPage = () => {
               <StatusBadge tone="success">Запись создана</StatusBadge>
               <Title level="2">Вы записаны</Title>
               <Text className="muted-text">
-                Регистрация создана {new Date(wizard.createdRegistration.registeredAt).toLocaleString()}. Теперь можно поставить напоминание или открыть список своих записей.
+                Регистрация создана {formatDateTime(wizard.createdRegistration.registeredAt)}. Теперь можно поставить напоминание или открыть список своих записей.
               </Text>
               <div className="profile-summary">
                 <div className="meta-tile">
                   <InfoRow label="ФИ" value={wizard.createdRegistration.profileUsed.fullName} />
-                </div>
-                <div className="meta-tile">
-                  <InfoRow label="Telegram" value={wizard.createdRegistration.profileUsed.telegramUsername ?? 'Не указан'} />
                 </div>
               </div>
               <Text className="muted-text">
@@ -155,7 +152,6 @@ export const RegistrationWizardPage = () => {
               {!wizard.eventCard.activeForm && wizard.profile && (
                 <div className="profile-summary">
                   <div className="meta-tile"><InfoRow label="ФИ" value={wizard.profile.fullName} /></div>
-                  <div className="meta-tile"><InfoRow label="Telegram" value={wizard.profile.telegramUsername ?? 'Не указан'} /></div>
                 </div>
               )}
 

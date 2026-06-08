@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Card, Div, Group, Text, Title } from '@vkontakte/vkui';
 import { consentsApi } from '../api/consents.api';
 import { ConsentDocumentDto, ConsentRecordDto } from '../api/contracts';
@@ -9,6 +10,7 @@ import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { formatDateTime } from '../utils/format';
 
 export const ConsentPage = () => {
+  const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const [accepted, setAccepted] = useState(false);
   const [consentDocument, setConsentDocument] = useState<ConsentDocumentDto | null>(null);
@@ -72,6 +74,7 @@ export const ConsentPage = () => {
         eyebrow="Персональные данные"
         title="Согласие на обработку ПД"
         subtitle="Здесь можно прочитать условия обработки данных и заранее сохранить согласие для будущих регистраций."
+        action={<Button mode="secondary" onClick={() => navigate('/profile')}>Назад</Button>}
       />
 
       <StateBlock loading={loading} error={error}>
@@ -101,9 +104,6 @@ export const ConsentPage = () => {
                     <div className="admin-table-row" key={consent.id}>
                       <Text weight="2">Версия: {consent.consentVersion}</Text>
                       <Text className="muted-text">Принято: {formatDateTime(consent.acceptedAt)}</Text>
-                      <Text className="muted-text">
-                        Контекст: {consent.eventRegistrationId ? 'регистрация' : consent.eventId ? 'мероприятие' : 'общий профиль'}
-                      </Text>
                     </div>
                   ))
                 )}

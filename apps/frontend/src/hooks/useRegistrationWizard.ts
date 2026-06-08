@@ -24,11 +24,6 @@ const isNameQuestion = (question: FormQuestionDto) => {
   );
 };
 
-const isTelegramQuestion = (question: FormQuestionDto) => {
-  const source = `${question.fieldKey} ${question.label}`.toLowerCase();
-  return source.includes('telegram') || source.includes('tg') || source.includes('телеграм');
-};
-
 const profileValueForQuestion = (
   profile: UserProfileDto | null,
   question: FormQuestionDto,
@@ -39,10 +34,6 @@ const profileValueForQuestion = (
 
   if (question.questionType === 'TEXT' && isNameQuestion(question)) {
     return profile.fullName;
-  }
-
-  if (question.questionType === 'TEXT' && isTelegramQuestion(question)) {
-    return profile.telegramUsername ?? undefined;
   }
 
   return undefined;
@@ -117,7 +108,7 @@ export const useRegistrationWizard = (eventId?: string) => {
     }
 
     if (!currentProfile.profile) {
-      return 'Сначала заполните личный кабинет: ФИ и Telegram username нужны для регистрации и автозаполнения формы.';
+      return 'Сначала заполните личный кабинет: фамилия и имя нужны для регистрации и автозаполнения формы.';
     }
 
     return null;

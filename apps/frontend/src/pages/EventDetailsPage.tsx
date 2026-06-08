@@ -109,7 +109,7 @@ export const EventDetailsPage = () => {
                 {isWaitlistActive && <StatusBadge tone="warning">Вы в листе ожидания места</StatusBadge>}
                 {isWaitlistNotified && <StatusBadge tone="success">Место появилось — можно попробовать записаться</StatusBadge>}
                 {showProfileHint && (
-                  <StatusBadge tone="warning">Для записи нужен заполненный профиль: ФИ и Telegram username</StatusBadge>
+                  <StatusBadge tone="warning">Для записи нужен заполненный профиль: фамилия и имя</StatusBadge>
                 )}
                 {waitlist.error && <StatusBadge tone="danger">{waitlist.error}</StatusBadge>}
               </Div>

@@ -14,7 +14,7 @@ export const AdminAuditLogList = ({ logs, loading, error }: AdminAuditLogListPro
     <div>
       <Text className="eyebrow">Audit log</Text>
       <Title level="3">Журнал административных действий</Title>
-      <Text className="muted-text">В журнал не пишутся сырые ответы формы, ФИ, VK ID или Telegram username целиком.</Text>
+      <Text className="muted-text">В журнал не пишутся сырые ответы формы, ФИ или VK ID целиком.</Text>
     </div>
     <AsyncBoundary
       loading={loading}

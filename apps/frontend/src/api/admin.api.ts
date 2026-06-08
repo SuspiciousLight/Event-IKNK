@@ -13,6 +13,7 @@ type RegistrationsQuery = {
   page?: number;
   pageSize?: number;
   search?: string;
+  status?: 'ACTIVE' | 'CANCELED';
   includeCanceled?: boolean;
   sortBy?: 'registeredAt' | 'canceledAt' | 'fullName';
   sortOrder?: 'asc' | 'desc';
@@ -81,6 +82,12 @@ export const adminApi = {
     apiRequest<PaginatedResponseDto<AdminRegistrationRowDto>>(
       `/admin/events/${eventId}/registrations${buildQueryString(query ?? {})}`,
     ),
+
+  updateRegistrationStatus: (eventId: string, registrationId: string, status: 'ACTIVE' | 'CANCELED') =>
+    apiRequest<AdminRegistrationRowDto>(`/admin/events/${eventId}/registrations/${registrationId}/status`, {
+      method: 'PATCH',
+      body: { status },
+    }),
 
   exportEventRegistrationsExcel: async (eventId: string, includeCanceled?: boolean) => {
     const query = buildQueryString({ includeCanceled });

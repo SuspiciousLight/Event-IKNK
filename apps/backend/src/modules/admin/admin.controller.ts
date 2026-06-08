@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   Res,
@@ -29,6 +30,7 @@ import { ExportRegistrationsQueryDto } from './dto/export-registrations-query.dt
 import { CreateNotificationCampaignDto } from './dto/create-notification-campaign.dto';
 import { AdminEventsQueryDto } from './dto/admin-events-query.dto';
 import { AdminFormTemplatesQueryDto } from './dto/admin-form-templates-query.dto';
+import { UpdateRegistrationStatusDto } from './dto/update-registration-status.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -90,6 +92,17 @@ export class AdminController {
     @Query() query: AdminRegistrationsQueryDto,
   ) {
     return this.adminService.getEventRegistrations(user, eventId, query);
+  }
+
+  @Patch('events/:eventId/registrations/:registrationId/status')
+  @RateLimit({ limit: 30, windowMs: 60 * 1000, keyPrefix: 'admin-registration-status' })
+  updateRegistrationStatus(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('eventId', new ParseUUIDPipe({ version: '4' })) eventId: string,
+    @Param('registrationId', new ParseUUIDPipe({ version: '4' })) registrationId: string,
+    @Body() dto: UpdateRegistrationStatusDto,
+  ) {
+    return this.adminService.updateRegistrationStatus(user, eventId, registrationId, dto);
   }
 
   @Get('events/:eventId/registrations/excel')

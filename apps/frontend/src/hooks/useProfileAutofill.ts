@@ -13,8 +13,7 @@ const EMPTY_PROFILE: ProfileFormState = {
   telegramUsername: '',
 };
 
-const TELEGRAM_USERNAME_REGEX = /^@[A-Za-z0-9_]{5,32}$/;
-const NAME_PART_REGEX = /^\S{2,}$/;
+const NAME_PART_REGEX = /^\p{L}[\p{L}'\u2019-]{1,63}$/u;
 
 const splitFullName = (fullName: string): Pick<ProfileFormState, 'lastName' | 'firstName'> => {
   const [lastName = '', firstName = ''] = fullName.trim().split(/\s+/);
@@ -73,13 +72,13 @@ export const useProfileAutofill = () => {
   }, [requiresDisclaimer]);
 
   const completion = useMemo(() => {
-    const filled = [profile.lastName, profile.firstName, profile.telegramUsername].filter((value) => value.trim()).length;
-    return Math.round((filled / 3) * 100);
+    const filled = [profile.lastName, profile.firstName].filter((value) => value.trim()).length;
+    return Math.round((filled / 2) * 100);
   }, [profile]);
 
-  const telegramIsValid = useMemo(
-    () => TELEGRAM_USERNAME_REGEX.test(profile.telegramUsername.trim()),
-    [profile.telegramUsername],
+  const nameIsValid = useMemo(
+    () => NAME_PART_REGEX.test(profile.lastName.trim()) && NAME_PART_REGEX.test(profile.firstName.trim()),
+    [profile.firstName, profile.lastName],
   );
 
   const updateField = (field: keyof ProfileFormState, value: string) => {
@@ -95,13 +94,8 @@ export const useProfileAutofill = () => {
     setSuccess(null);
 
     try {
-      if (!telegramIsValid) {
-        setSaveError('Telegram username должен начинаться с @ и содержать 5-32 символа: латиница, цифры или _.');
-        return false;
-      }
-
-      if (!NAME_PART_REGEX.test(profile.lastName.trim()) || !NAME_PART_REGEX.test(profile.firstName.trim())) {
-        setSaveError('Укажите только фамилию и имя, каждое поле минимум 2 символа, без отчества.');
+      if (!nameIsValid) {
+        setSaveError('Укажите фамилию и имя без цифр и служебных символов. Можно использовать буквы, дефис и апостроф.');
         return false;
       }
 
@@ -113,7 +107,6 @@ export const useProfileAutofill = () => {
       const wasExisting = currentProfile.hasProfile;
       await currentProfile.saveProfile({
         fullName: buildFullName(profile),
-        telegramUsername: profile.telegramUsername.trim(),
         ...(requiresDisclaimer ? { disclaimerAccepted: true } : {}),
       });
       setSuccess(wasExisting ? 'Профиль обновлён. Данные будут подставляться в новые регистрации.' : 'Профиль создан. Теперь регистрация будет быстрее.');
@@ -140,7 +133,7 @@ export const useProfileAutofill = () => {
     saveError,
     success,
     completion,
-    telegramIsValid,
+    nameIsValid,
     updateField,
     setDisclaimerAcknowledged,
     submit,

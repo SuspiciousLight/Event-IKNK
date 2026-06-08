@@ -1,4 +1,4 @@
-﻿import { Button, Div, Text, Title } from '@vkontakte/vkui';
+﻿import { Button, Div, Select, Text, Title } from '@vkontakte/vkui';
 import { AdminRegistrationRowDto, PaginationDto } from '../api/contracts';
 import { AsyncBoundary } from './common/AsyncBoundary';
 import { StatusBadge } from './common/Ui';
@@ -11,6 +11,9 @@ type AdminRegistrationsTableProps = {
   error?: string | null;
   onPrevPage?: () => void;
   onNextPage?: () => void;
+  onStatusChange?: (registrationId: string, status: 'ACTIVE' | 'CANCELED') => void;
+  statusBusyId?: string | null;
+  emptyText?: string;
 };
 
 export const AdminRegistrationsTable = ({
@@ -20,6 +23,9 @@ export const AdminRegistrationsTable = ({
   error,
   onPrevPage,
   onNextPage,
+  onStatusChange,
+  statusBusyId,
+  emptyText = 'Когда студенты начнут записываться, они появятся в этом списке.',
 }: AdminRegistrationsTableProps) => (
   <Div className="grid-stack">
     <div className="event-card-top">
@@ -34,7 +40,7 @@ export const AdminRegistrationsTable = ({
       error={error}
       isEmpty={!loading && !error && rows.length === 0}
       emptyTitle="Участников пока нет"
-      emptyText="Когда студенты начнут записываться, они появятся в этом списке."
+      emptyText={emptyText}
     >
       <div className="admin-table">
         {rows.map((row) => (
@@ -43,11 +49,23 @@ export const AdminRegistrationsTable = ({
               <Text weight="2" className="admin-registration-name">{row.userProfile.fullName}</Text>
               <StatusBadge tone={row.status === 'ACTIVE' ? 'success' : 'danger'}>{formatStatus(row.status)}</StatusBadge>
             </div>
-            <Text className="muted-text">
-              VK ID: {row.userProfile.vkUserId ?? 'не получен'} · Telegram: {row.userProfile.telegramUsername ?? 'не указан'}
-            </Text>
+            <Text className="muted-text">VK ID: {row.userProfile.vkUserId ?? 'не получен'}</Text>
             <Text className="muted-text">Записан: {formatDateTime(row.registeredAt)}</Text>
             {row.canceledAt && <Text className="muted-text">Отменено: {formatDateTime(row.canceledAt)}</Text>}
+            {onStatusChange && (
+              <div className="admin-registration-status-control">
+                <Text className="muted-text">Статус участника</Text>
+                <Select
+                  value={row.status}
+                  disabled={statusBusyId === row.id}
+                  options={[
+                    { label: 'Активна', value: 'ACTIVE' },
+                    { label: 'Отменена', value: 'CANCELED' },
+                  ]}
+                  onChange={(event) => onStatusChange(row.id, event.target.value as 'ACTIVE' | 'CANCELED')}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -2,7 +2,7 @@
 import { ProfileDisclaimerDto, UserProfileDto } from './contracts';
 
 export type UpdateProfilePayload = Pick<UserProfileDto, 'fullName'> & {
-  telegramUsername: string;
+  telegramUsername?: string;
   disclaimerAccepted?: boolean;
 };
 

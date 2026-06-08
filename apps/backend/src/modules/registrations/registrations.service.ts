@@ -143,10 +143,10 @@ export class RegistrationsService {
       });
     }
 
-    if (!user.vkUserId || !user.profile.telegramUsername) {
+    if (!user.vkUserId || !user.profile.fullName) {
       throw new BadRequestException({
         code: 'PROFILE_FIELDS_REQUIRED',
-        message: 'Profile should include VK ID and Telegram username before registration',
+        message: 'Profile should include VK ID, surname and first name before registration',
       });
     }
 

@@ -28,6 +28,7 @@ export const useAdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [registrationsLoading, setRegistrationsLoading] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [statusBusyId, setStatusBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [registrationsError, setRegistrationsError] = useState<string | null>(null);
   const [logsError, setLogsError] = useState<string | null>(null);
@@ -91,7 +92,7 @@ export const useAdminPanel = () => {
         page,
         pageSize: 20,
         search: registrationsSearch,
-        includeCanceled,
+        status: includeCanceled ? 'CANCELED' : 'ACTIVE',
         sortBy: 'registeredAt',
         sortOrder: 'desc',
       });
@@ -123,6 +124,37 @@ export const useAdminPanel = () => {
       }
     }
   }, [handleAdminRequestError]);
+
+  const updateRegistrationStatus = useCallback(async (registrationId: string, status: 'ACTIVE' | 'CANCELED') => {
+    if (!selectedEventId) {
+      setRegistrationsError('Выберите мероприятие.');
+      return false;
+    }
+
+    setStatusBusyId(registrationId);
+    setRegistrationsError(null);
+    try {
+      await adminApi.updateRegistrationStatus(selectedEventId, registrationId, status);
+      await Promise.all([
+        loadRegistrations(registrationsPage, { silent: true }),
+        loadBaseData({ silent: true }),
+        loadLogs({ silent: true }),
+      ]);
+      return true;
+    } catch (requestError: unknown) {
+      setRegistrationsError(await handleAdminRequestError(requestError, 'Не удалось изменить статус участника'));
+      return false;
+    } finally {
+      setStatusBusyId(null);
+    }
+  }, [
+    handleAdminRequestError,
+    loadBaseData,
+    loadLogs,
+    loadRegistrations,
+    registrationsPage,
+    selectedEventId,
+  ]);
 
   const refresh = useCallback(async () => {
     if (!admin) {
@@ -166,6 +198,7 @@ export const useAdminPanel = () => {
     loading,
     registrationsLoading,
     logsLoading,
+    statusBusyId,
     error,
     registrationsError,
     logsError,
@@ -175,6 +208,7 @@ export const useAdminPanel = () => {
     loadBaseData,
     loadRegistrations,
     loadLogs,
+    updateRegistrationStatus,
     refresh,
   };
 };

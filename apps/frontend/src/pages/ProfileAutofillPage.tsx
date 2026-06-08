@@ -39,7 +39,7 @@ export const ProfileAutofillPage = () => {
       <PageHero
         eyebrow="Личный кабинет"
         title="Профиль автозаполнения"
-        subtitle="VK ID определяется автоматически. В профиле студент вводит только фамилию, имя и Telegram username для связи."
+        subtitle="VK ID определяется автоматически. В профиле студент вводит только фамилию и имя."
         action={<Button mode="secondary" onClick={() => navigate('/consent')}>Согласие на ПД</Button>}
       />
 
@@ -66,7 +66,6 @@ export const ProfileAutofillPage = () => {
               {profile.savedProfile && (
                 <div className="profile-summary">
                   <div className="meta-tile"><InfoRow label="ФИ" value={profile.savedProfile.fullName} /></div>
-                  <div className="meta-tile"><InfoRow label="Telegram" value={profile.savedProfile.telegramUsername ?? 'Не указан'} /></div>
                   <div className="meta-tile"><InfoRow label="Обновлено" value={formatDateTime(profile.savedProfile.updatedAt)} /></div>
                 </div>
               )}
@@ -85,15 +84,6 @@ export const ProfileAutofillPage = () => {
                     <Input value={profile.profile.firstName} onChange={(event) => profile.updateField('firstName', event.target.value)} placeholder="Иван" required />
                   </FormItem>
                 </div>
-
-                <FormItem top="Telegram username" bottom="Формат: @username, без номера телефона">
-                  <Input
-                    value={profile.profile.telegramUsername}
-                    onChange={(event) => profile.updateField('telegramUsername', event.target.value)}
-                    placeholder="@student_2026"
-                    required
-                  />
-                </FormItem>
 
                 <Card mode="shadow" className="soft-card">
                   <Div className="grid-stack">

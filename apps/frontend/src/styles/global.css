@@ -933,6 +933,16 @@ a {
   min-width: 0;
 }
 
+.admin-overview-event-stats,
+.admin-events-list {
+  order: 1;
+}
+
+.admin-overview-global-stats,
+.admin-events-create {
+  order: 2;
+}
+
 .admin-table {
   display: grid;
   border: 1px solid var(--app-border);
@@ -987,6 +997,13 @@ a {
 .admin-registration-name {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.admin-registration-status-control {
+  display: grid;
+  gap: 6px;
+  max-width: 240px;
+  margin-top: 8px;
 }
 
 .admin-form-grid {

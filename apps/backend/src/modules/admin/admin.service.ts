@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -12,6 +13,7 @@ import {
   QuestionType,
   RegistrationStatus,
   RecipientStatus,
+  ReminderStatus,
 } from '@prisma/client';
 import ExcelJS from 'exceljs';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
@@ -26,6 +28,7 @@ import { ExportRegistrationsQueryDto } from './dto/export-registrations-query.dt
 import { CreateNotificationCampaignDto } from './dto/create-notification-campaign.dto';
 import { AdminEventsQueryDto } from './dto/admin-events-query.dto';
 import { AdminFormTemplatesQueryDto } from './dto/admin-form-templates-query.dto';
+import { UpdateRegistrationStatusDto } from './dto/update-registration-status.dto';
 
 type AdminQuestionInput = {
   position: number;
@@ -491,8 +494,11 @@ export class AdminService {
     const where: Prisma.EventRegistrationWhereInput = {
       eventId,
       deletedAt: null,
-      ...(query.status ? { status: query.status as RegistrationStatus } : {}),
-      ...(!query.includeCanceled ? { status: RegistrationStatus.ACTIVE } : {}),
+      ...(query.status
+        ? { status: query.status as RegistrationStatus }
+        : !query.includeCanceled
+          ? { status: RegistrationStatus.ACTIVE }
+          : {}),
       ...(query.search
         ? {
             OR: [
@@ -546,6 +552,180 @@ export class AdminService {
         },
       })),
       meta: { page, pageSize, total },
+    };
+  }
+
+  async updateRegistrationStatus(
+    actor: AuthenticatedUser,
+    eventId: string,
+    registrationId: string,
+    dto: UpdateRegistrationStatusDto,
+  ) {
+    const admin = await this.resolveAdmin(actor);
+    const nextStatus = dto.status as RegistrationStatus;
+    const now = new Date();
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const registration = await tx.eventRegistration.findFirst({
+        where: {
+          id: registrationId,
+          eventId,
+          deletedAt: null,
+          event: { deletedAt: null },
+        },
+        select: {
+          id: true,
+          eventId: true,
+          userId: true,
+          status: true,
+          registeredAt: true,
+          canceledAt: true,
+          event: {
+            select: {
+              capacity: true,
+            },
+          },
+          user: {
+            select: {
+              vkUserId: true,
+            },
+          },
+          userProfile: {
+            select: {
+              fullName: true,
+              telegramUsername: true,
+            },
+          },
+        },
+      });
+
+      if (!registration) {
+        throw new NotFoundException('Registration not found');
+      }
+
+      if (registration.status === nextStatus) {
+        return {
+          previousStatus: registration.status,
+          updated: registration,
+        };
+      }
+
+      if (nextStatus === RegistrationStatus.ACTIVE) {
+        if (registration.event.capacity !== null) {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${eventId}))`;
+        }
+
+        const duplicateActive = await tx.eventRegistration.findFirst({
+          where: {
+            id: { not: registrationId },
+            eventId,
+            userId: registration.userId,
+            status: RegistrationStatus.ACTIVE,
+            activeMarker: 1,
+            deletedAt: null,
+          },
+          select: { id: true },
+        });
+
+        if (duplicateActive) {
+          throw new ConflictException({
+            code: 'ACTIVE_REGISTRATION_EXISTS',
+            message: 'Active registration already exists for this user and event',
+          });
+        }
+
+        if (registration.event.capacity !== null) {
+          const activeCount = await tx.eventRegistration.count({
+            where: {
+              eventId,
+              status: RegistrationStatus.ACTIVE,
+              activeMarker: 1,
+              deletedAt: null,
+            },
+          });
+
+          if (activeCount >= registration.event.capacity) {
+            throw new ConflictException({
+              code: 'EVENT_CAPACITY_REACHED',
+              message: 'No available places left for this event',
+            });
+          }
+        }
+      }
+
+      const updated = await tx.eventRegistration.update({
+        where: { id: registrationId },
+        data:
+          nextStatus === RegistrationStatus.ACTIVE
+            ? {
+                status: RegistrationStatus.ACTIVE,
+                activeMarker: 1,
+                canceledAt: null,
+                canceledByUserId: null,
+                cancelReason: null,
+              }
+            : {
+                status: RegistrationStatus.CANCELED,
+                activeMarker: null,
+                canceledAt: now,
+                canceledByUserId: admin.userId,
+                cancelReason: dto.reason?.trim() || 'Changed by admin',
+              },
+        select: {
+          id: true,
+          status: true,
+          registeredAt: true,
+          canceledAt: true,
+          user: {
+            select: {
+              vkUserId: true,
+            },
+          },
+          userProfile: {
+            select: {
+              fullName: true,
+              telegramUsername: true,
+            },
+          },
+        },
+      });
+
+      if (nextStatus === RegistrationStatus.CANCELED) {
+        await tx.reminder.updateMany({
+          where: {
+            eventRegistrationId: registrationId,
+            status: ReminderStatus.SCHEDULED,
+            deletedAt: null,
+          },
+          data: {
+            status: ReminderStatus.CANCELED,
+            canceledAt: now,
+          },
+        });
+      }
+
+      return {
+        previousStatus: registration.status,
+        updated,
+      };
+    });
+
+    await this.logAdminAction(admin.userId, 'ADMIN_REGISTRATION_STATUS_CHANGED', 'event_registration', registrationId, {
+      eventId,
+      previousStatus: result.previousStatus,
+      nextStatus,
+    });
+
+    return {
+      id: result.updated.id,
+      status: result.updated.status,
+      registeredAt: result.updated.registeredAt,
+      canceledAt: result.updated.canceledAt,
+      userProfile: {
+        fullName: result.updated.userProfile.fullName,
+        vkUserId: result.updated.user.vkUserId,
+        telegramUsername: result.updated.userProfile.telegramUsername,
+      },
     };
   }
 
@@ -610,7 +790,7 @@ export class AdminService {
         vkUserId: item.user.vkUserId,
         vkProfileUrl: vkProfileUrl ? { text: vkProfileUrl, hyperlink: vkProfileUrl } : '',
         telegramUrl: telegramUrl ? { text: telegramUrl, hyperlink: telegramUrl } : '',
-        registeredAt: item.registeredAt.toISOString(),
+        registeredAt: this.formatExportDateTime(item.registeredAt),
         status: item.status,
       });
     }
@@ -822,6 +1002,16 @@ export class AdminService {
     }
 
     return { registeredAt: order };
+  }
+
+  private formatExportDateTime(value: Date): string {
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(value).replace(',', '');
   }
 
   private async logAdminAction(

@@ -30,6 +30,7 @@ export const AdminLoginPage = () => {
         eyebrow="Администрирование"
         title="Вход администратора"
         subtitle="Раздел закрыт для обычных пользователей. Сессия хранится только в HttpOnly cookie, без localStorage."
+        action={<Button mode="secondary" onClick={() => navigate('/profile')}>Назад</Button>}
       />
 
       <Card mode="shadow" className="admin-login-card soft-card">

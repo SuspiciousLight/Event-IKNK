@@ -72,7 +72,7 @@ export const AdminEventFromTemplateForm = ({ templates, onDone, onError }: Admin
         <FormItem top="Место">
           <Input value={location} onChange={(event) => setLocation(event.target.value)} />
         </FormItem>
-        <FormItem top="Вместимость">
+        <FormItem top="Вместимость" bottom="Оставьте поле пустым, если лимит участников не ограничен.">
           <Input type="number" min={1} value={capacity} onChange={(event) => setCapacity(event.target.value)} placeholder="Без ограничения" />
         </FormItem>
       </div>
