@@ -73,7 +73,7 @@ export const AppLayout = () => {
             }}
           />
           <div>
-            <Text weight="2">{isAdminRoute ? 'Панель администратора' : 'Event-отдел'}</Text>
+            <Text weight="2">{isAdminRoute ? 'Панель администратора' : 'EVENT-отдел ПРОФ.ИКНК'}</Text>
             <Text className="app-brand-caption">
               {isAdminRoute ? 'Формы, участники и рассылки' : 'Запись на мероприятия в пару шагов'}
             </Text>

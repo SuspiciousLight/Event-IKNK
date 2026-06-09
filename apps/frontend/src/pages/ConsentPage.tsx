@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, Div, Group, Text, Title } from '@vkontakte/vkui';
+import { Button, Card, Div, Group, Text } from '@vkontakte/vkui';
 import { consentsApi } from '../api/consents.api';
 import { ConsentDocumentDto, ConsentRecordDto } from '../api/contracts';
 import { ConsentBlock } from '../components/ConsentBlock';
 import { PageHero, StateBlock } from '../components/common/Ui';
 import { useAppSnackbar } from '../hooks/useAppSnackbar';
 import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
-import { formatDateTime } from '../utils/format';
 
 export const ConsentPage = () => {
   const navigate = useNavigate();
@@ -72,9 +71,14 @@ export const ConsentPage = () => {
     <Group className="page-section" mode="plain">
       <PageHero
         eyebrow="Персональные данные"
-        title="Согласие на обработку ПД"
-        subtitle="Здесь можно прочитать условия обработки данных и заранее сохранить согласие для будущих регистраций."
-        action={<Button mode="secondary" onClick={() => navigate('/profile')}>Назад</Button>}
+        title="Согласие на обработку данных"
+        subtitle="Здесь можно прочитать условия обработки данных для записи на мероприятия."
+        action={(
+          <>
+            <Button mode="secondary" onClick={() => navigate('/profile')}>Назад</Button>
+            <Button mode="secondary" onClick={() => navigate('/events')}>Афиша</Button>
+          </>
+        )}
       />
 
       <StateBlock loading={loading} error={error}>
@@ -94,21 +98,11 @@ export const ConsentPage = () => {
               </Div>
             </Card>
 
-            <Card mode="shadow" className="soft-card">
-              <Div className="grid-stack">
-                <Title level="3">История согласий</Title>
-                {consents.length === 0 ? (
-                  <Text className="muted-text">Согласия ещё не принимались.</Text>
-                ) : (
-                  consents.map((consent) => (
-                    <div className="admin-table-row" key={consent.id}>
-                      <Text weight="2">Версия: {consent.consentVersion}</Text>
-                      <Text className="muted-text">Принято: {formatDateTime(consent.acceptedAt)}</Text>
-                    </div>
-                  ))
-                )}
-              </Div>
-            </Card>
+            {consents.length > 0 && (
+              <Text className="muted-text">
+                Актуальное согласие сохранено. При записи на конкретное мероприятие приложение дополнительно зафиксирует согласие для этой записи.
+              </Text>
+            )}
           </div>
         )}
       </StateBlock>

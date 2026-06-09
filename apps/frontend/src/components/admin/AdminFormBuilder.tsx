@@ -42,7 +42,7 @@ const validateBuilderQuestions = (questions: AdminQuestionDraft[]): string | nul
       return `Заполните текст вопроса №${index + 1}.`;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(question.fieldKey.trim())) {
-      return `Код ответа вопроса №${index + 1}: только латиница, цифры и подчёркивание.`;
+      return `Проверьте вопрос №${index + 1}: служебный номер вопроса сформирован некорректно.`;
     }
     const needsOptions =
       question.questionType === 'SELECT' || question.questionType === 'CHECKBOX' || question.questionType === 'COURSE';

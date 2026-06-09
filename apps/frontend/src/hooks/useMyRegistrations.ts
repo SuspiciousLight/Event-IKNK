@@ -52,7 +52,23 @@ export const useMyRegistrations = (scope: MyRegistrationsScope) => {
     }
   };
 
+  const resume = async (registrationId: string) => {
+    setBusyId(registrationId);
+    setError(null);
+
+    try {
+      await registrationsApi.resume(registrationId);
+      await load();
+      return true;
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : 'Не удалось возобновить запись');
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const refresh = useCallback(() => load({ silent: true }), [load]);
 
-  return { items, loading, error, busyId, cancel, reload: load, refresh };
+  return { items, loading, error, busyId, cancel, resume, reload: load, refresh };
 };

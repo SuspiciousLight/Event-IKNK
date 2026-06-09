@@ -39,4 +39,13 @@ export class RegistrationsController {
   ) {
     return this.registrationsService.cancelRegistration(user.userId, params.registrationId, dto);
   }
+
+  @Patch(':registrationId/resume')
+  @RateLimit({ limit: 10, windowMs: 60 * 1000, keyPrefix: 'user-resume-registration' })
+  resumeRegistration(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param() params: RegistrationIdParamDto,
+  ) {
+    return this.registrationsService.resumeRegistration(user.userId, params.registrationId);
+  }
 }

@@ -19,6 +19,8 @@
     "demo": "corepack pnpm run build && corepack pnpm run preview",
     "test": "corepack pnpm -r test",
     "typecheck": "corepack pnpm -r typecheck",
+    "loadtest:tank": "powershell -ExecutionPolicy Bypass -File load-testing/yandex-tank/run.ps1 -Config load.yaml",
+    "loadtest:tank:smoke": "powershell -ExecutionPolicy Bypass -File load-testing/yandex-tank/run.ps1 -Config load-smoke.yaml",
     "tunnel:pinggy": "ssh -p 443 -R 0:localhost:4173 a.pinggy.io",
     "tunnel:pinggy:dev": "ssh -p 443 -R 0:localhost:5173 a.pinggy.io"
   },

@@ -50,6 +50,7 @@ export class AdminService {
 
   async listEvents(actor: AuthenticatedUser, query: AdminEventsQueryDto) {
     await this.resolveAdmin(actor);
+    await this.archiveFinishedPublishedEvents();
 
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
@@ -761,7 +762,10 @@ export class AdminService {
         deletedAt: null,
         ...(!query.includeCanceled ? { status: RegistrationStatus.ACTIVE } : {}),
       },
-      orderBy: { registeredAt: 'asc' },
+      orderBy: [
+        { status: 'asc' },
+        { registeredAt: 'asc' },
+      ],
       select: {
         status: true,
         registeredAt: true,
@@ -804,7 +808,7 @@ export class AdminService {
     worksheet.getColumn('vkProfileUrl').font = { color: { argb: 'FF2563EB' }, underline: true };
 
     const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
-    const safeFileName = `event-${eventId}-registrations.xlsx`;
+    const safeFileName = `${this.sanitizeFileName(event.title)}-registrations.xlsx`;
 
     await this.logAdminAction(admin.userId, 'ADMIN_EXPORT_EXCEL', 'event', eventId, {
       rows: registrations.length,
@@ -958,6 +962,19 @@ export class AdminService {
     return { startAt, endAt };
   }
 
+  private async archiveFinishedPublishedEvents(): Promise<void> {
+    await this.prisma.event.updateMany({
+      where: {
+        deletedAt: null,
+        status: EventStatus.PUBLISHED,
+        endAt: { lt: new Date() },
+      },
+      data: {
+        status: EventStatus.ARCHIVED,
+      },
+    });
+  }
+
   private validateQuestions(questions: AdminQuestionInput[]): void {
     const positionSet = new Set<number>();
     const keySet = new Set<string>();
@@ -1023,6 +1040,16 @@ export class AdminService {
       hour: '2-digit',
       minute: '2-digit',
     }).format(value).replace(',', '');
+  }
+
+  private sanitizeFileName(value: string): string {
+    const normalized = value
+      .trim()
+      .replace(/[\\/:*?"<>|]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .slice(0, 80);
+
+    return normalized || 'event';
   }
 
   private async logAdminAction(

@@ -32,8 +32,13 @@ export const RegistrationWizardPage = () => {
       <PageHero
         eyebrow="Регистрация"
         title={event?.title ?? 'Запись на мероприятие'}
-        subtitle="Сценарий состоит из нескольких шагов: данные профиля, ответы на форму и обязательное согласие на обработку ПД."
-        action={<Button mode="secondary" onClick={() => navigate(event ? `/events/${event.id}` : '/events')}>Назад</Button>}
+        subtitle="Сценарий состоит из нескольких шагов: данные профиля, ответы на форму и обязательное согласие на обработку данных."
+        action={(
+          <>
+            <Button mode="secondary" onClick={() => navigate(event ? `/events/${event.id}` : '/events')}>Назад</Button>
+            <Button mode="secondary" onClick={() => navigate('/events')}>Афиша</Button>
+          </>
+        )}
       />
 
       <StateBlock loading={wizard.loading} error={wizard.error}>
@@ -51,9 +56,7 @@ export const RegistrationWizardPage = () => {
                   <InfoRow label="ФИ" value={wizard.createdRegistration.profileUsed.fullName} />
                 </div>
               </div>
-              <Text className="muted-text">
-                Факт согласия сохранён: версия {wizard.createdRegistration.consent.version}. Сырые ответы и ПД не попадают в клиентские логи.
-              </Text>
+              <Text className="muted-text">Согласие сохранено. Организаторы увидят вашу запись в списке участников.</Text>
               <div className="form-action-row">
                 <Button onClick={() => navigate(`/reminder/${wizard.createdRegistration?.id}`)}>
                   Поставить напоминание
@@ -145,7 +148,7 @@ export const RegistrationWizardPage = () => {
                 <Text className="muted-text">
                   {wizard.eventCard.activeForm
                     ? 'Без согласия запись не создаётся. Мы используем данные только для регистрации на выбранное мероприятие.'
-                    : 'Для этого мероприятия дополнительных вопросов нет. Мы используем только данные из профиля и фиксируем согласие на обработку ПД.'}
+                    : 'Для этого мероприятия дополнительных вопросов нет. Мы используем только данные из профиля и фиксируем согласие на обработку данных.'}
                 </Text>
               </div>
 

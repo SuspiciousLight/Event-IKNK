@@ -15,19 +15,24 @@ const RegistrationCard = ({
   reason,
   onReasonChange,
   onCancel,
+  onResume,
   onReminder,
+  onOpenEvent,
 }: {
   item: RegistrationListItemDto;
   busy: boolean;
   reason: string;
   onReasonChange: (value: string) => void;
   onCancel: () => void;
+  onResume: () => void;
   onReminder: () => void;
+  onOpenEvent: () => void;
 }) => {
   const isActive = item.status === 'ACTIVE';
   const isEventFinished = Boolean(item.isEventFinished);
   const isEventArchived = item.event?.status === 'ARCHIVED';
   const isManageable = isActive && !isEventFinished && !isEventArchived;
+  const canResume = item.status === 'CANCELED' && !isEventFinished && !isEventArchived && item.event?.status === 'PUBLISHED';
   const badgeTone: 'success' | 'danger' | 'neutral' = isManageable ? 'success' : item.status === 'CANCELED' ? 'danger' : 'neutral';
   const badgeText = item.status === 'CANCELED'
     ? formatStatus(item.status)
@@ -79,6 +84,16 @@ const RegistrationCard = ({
               <Button mode="secondary" loading={busy} onClick={onCancel}>Отменить запись</Button>
             </div>
           </div>
+        ) : canResume ? (
+          <div className="cancel-box">
+            <Text className="muted-text">
+              Запись отменена{item.canceledAt ? ` ${formatDateTime(item.canceledAt)}` : ''}. Если планы изменились, можно вернуть запись. Сервер проверит, осталось ли место.
+            </Text>
+            <div className="inline-actions">
+              <Button mode="primary" loading={busy} onClick={onResume}>Возобновить запись</Button>
+              <Button mode="secondary" onClick={onOpenEvent}>Открыть мероприятие</Button>
+            </div>
+          </div>
         ) : (
           <Text className="muted-text">
             {item.status === 'CANCELED'
@@ -95,7 +110,7 @@ export const MyRegistrationsPage = () => {
   const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const [scope, setScope] = useState<MyRegistrationsScope>('active');
-  const { items, loading, error, busyId, cancel, refresh } = useMyRegistrations(scope);
+  const { items, loading, error, busyId, cancel, resume, refresh } = useMyRegistrations(scope);
   const [cancelReasonById, setCancelReasonById] = useState<Record<string, string>>({});
   const isArchive = scope === 'archive';
 
@@ -116,6 +131,23 @@ export const MyRegistrationsPage = () => {
       return;
     }
     showError('Не удалось отменить запись.');
+  };
+
+  const resumeRegistration = async (registrationId: string, eventTitle?: string) => {
+    const confirmed = window.confirm(
+      `Возобновить запись на «${eventTitle ?? 'мероприятие'}»? Если мест уже нет, запись не восстановится.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    const ok = await resume(registrationId);
+    if (ok) {
+      showSuccess('Запись возобновлена. Она снова появится в актуальных.');
+      setScope('active');
+      return;
+    }
+    showError('Не удалось возобновить запись. Возможно, мест уже нет или регистрация закрыта.');
   };
 
   return (
@@ -175,7 +207,9 @@ export const MyRegistrationsPage = () => {
               reason={cancelReasonById[item.id] ?? ''}
               onReasonChange={(value) => setCancelReasonById((prev) => ({ ...prev, [item.id]: value }))}
               onCancel={() => cancelRegistration(item.id, item.event?.title)}
+              onResume={() => resumeRegistration(item.id, item.event?.title)}
               onReminder={() => navigate(`/reminder/${item.id}`)}
+              onOpenEvent={() => navigate(`/events/${item.eventId}`)}
             />
           ))}
         </div>

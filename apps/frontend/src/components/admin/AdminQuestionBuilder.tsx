@@ -18,9 +18,9 @@ const QUESTION_TYPES: Array<{ label: string; value: QuestionType }> = [
   { label: 'Несколько вариантов', value: 'CHECKBOX' },
 ];
 
-const createQuestion = (position: number): AdminQuestionDraft => ({
+const createQuestion = (position: number, fieldKey = `question_${position}`): AdminQuestionDraft => ({
   position,
-  fieldKey: `question_${position}`,
+  fieldKey,
   label: '',
   questionType: 'TEXT',
   isRequired: true,
@@ -62,7 +62,13 @@ export const AdminQuestionBuilder = ({ questions, onChange }: AdminQuestionBuild
     onChange(next.map((question, itemIndex) => ({ ...question, position: itemIndex + 1 })));
   };
 
-  const addQuestion = () => onChange([...questions, createQuestion(questions.length + 1)]);
+  const addQuestion = () => {
+    let nextIndex = questions.length + 1;
+    while (questions.some((question) => question.fieldKey === `question_${nextIndex}`)) {
+      nextIndex += 1;
+    }
+    onChange([...questions, createQuestion(questions.length + 1, `question_${nextIndex}`)]);
+  };
 
   const removeQuestion = (index: number) => {
     onChange(questions.filter((_, itemIndex) => itemIndex !== index).map((question, itemIndex) => ({
@@ -85,9 +91,6 @@ export const AdminQuestionBuilder = ({ questions, onChange }: AdminQuestionBuild
               <Input value={question.label} onChange={(event) => updateQuestion(index, { label: event.target.value })} placeholder="Например: Ваш факультет" />
             </FormItem>
             <div className="admin-form-columns">
-              <FormItem top="Код ответа" bottom="Нужен системе для сохранения ответа и выгрузки. Можно оставить как есть: латиница, цифры и подчёркивание.">
-                <Input value={question.fieldKey} onChange={(event) => updateQuestion(index, { fieldKey: event.target.value })} placeholder="faculty" />
-              </FormItem>
               <FormItem top="Тип">
                 <Select value={question.questionType} options={QUESTION_TYPES} onChange={(event) => updateQuestion(index, { questionType: event.target.value as QuestionType })} />
               </FormItem>

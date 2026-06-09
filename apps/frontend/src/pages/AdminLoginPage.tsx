@@ -29,8 +29,13 @@ export const AdminLoginPage = () => {
       <PageHero
         eyebrow="Администрирование"
         title="Вход администратора"
-        subtitle="Раздел закрыт для обычных пользователей. Сессия хранится только в HttpOnly cookie, без localStorage."
-        action={<Button mode="secondary" onClick={() => navigate('/profile')}>Назад</Button>}
+        subtitle="Раздел закрыт для обычных пользователей. Войдите, чтобы управлять мероприятиями и участниками."
+        action={(
+          <>
+            <Button mode="secondary" onClick={() => navigate('/profile')}>Назад</Button>
+            <Button mode="secondary" onClick={() => navigate('/events')}>Афиша</Button>
+          </>
+        )}
       />
 
       <Card mode="shadow" className="admin-login-card soft-card">

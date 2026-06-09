@@ -8,6 +8,8 @@ export class EventsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getEvents(query: EventsQueryDto, userId: string) {
+    await this.archiveFinishedPublishedEvents();
+
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
 
@@ -128,6 +130,8 @@ export class EventsService {
   }
 
   async getEventCard(eventId: string, userId: string) {
+    await this.archiveFinishedPublishedEvents();
+
     const event = await this.prisma.event.findFirst({
       where: {
         id: eventId,
@@ -394,5 +398,18 @@ export class EventsService {
       notifiedAt: true,
       canceledAt: true,
     } as const;
+  }
+
+  private async archiveFinishedPublishedEvents(): Promise<void> {
+    await this.prisma.event.updateMany({
+      where: {
+        deletedAt: null,
+        status: EventStatus.PUBLISHED,
+        endAt: { lt: new Date() },
+      },
+      data: {
+        status: EventStatus.ARCHIVED,
+      },
+    });
   }
 }

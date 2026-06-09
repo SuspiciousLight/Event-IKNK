@@ -394,6 +394,147 @@ export class RegistrationsService {
     return transactionResult.registration;
   }
 
+  async resumeRegistration(userId: string, registrationId: string) {
+    const now = new Date();
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const registration = await tx.eventRegistration.findFirst({
+        where: {
+          id: registrationId,
+          userId,
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          eventId: true,
+          userId: true,
+          status: true,
+          event: {
+            select: {
+              id: true,
+              title: true,
+              startAt: true,
+              endAt: true,
+              location: true,
+              capacity: true,
+              status: true,
+              deletedAt: true,
+            },
+          },
+        },
+      });
+
+      if (!registration) {
+        throw new NotFoundException('Registration not found');
+      }
+
+      if (registration.status !== RegistrationStatus.CANCELED) {
+        throw new ConflictException({
+          code: 'REGISTRATION_NOT_CANCELED',
+          message: 'Only canceled registrations can be resumed',
+        });
+      }
+
+      if (
+        registration.event.deletedAt ||
+        registration.event.status !== EventStatus.PUBLISHED ||
+        registration.event.startAt <= now
+      ) {
+        throw new BadRequestException({
+          code: 'REGISTRATION_RESUME_CLOSED',
+          message: 'Registration cannot be resumed for inactive or already started event',
+        });
+      }
+
+      if (registration.event.capacity !== null) {
+        await this.lockEventCapacity(tx, registration.eventId);
+      }
+
+      await this.ensureNoActiveDuplicate(tx, registration.eventId, userId);
+      await this.ensureCapacityAvailable(tx, registration.eventId, registration.event.capacity);
+
+      await tx.seatWaitlistSubscription.updateMany({
+        where: {
+          eventId: registration.eventId,
+          userId,
+          status: SeatWaitlistStatus.ACTIVE,
+          activeMarker: 1,
+          deletedAt: null,
+        },
+        data: {
+          status: SeatWaitlistStatus.CANCELED,
+          activeMarker: null,
+          canceledAt: now,
+        },
+      });
+
+      return tx.eventRegistration.update({
+        where: { id: registrationId },
+        data: {
+          status: RegistrationStatus.ACTIVE,
+          activeMarker: 1,
+          canceledAt: null,
+          canceledByUserId: null,
+          cancelReason: null,
+        },
+        select: {
+          id: true,
+          eventId: true,
+          status: true,
+          registeredAt: true,
+          canceledAt: true,
+          cancelReason: true,
+          event: {
+            select: {
+              id: true,
+              title: true,
+              startAt: true,
+              endAt: true,
+              location: true,
+              status: true,
+            },
+          },
+          reminders: {
+            where: {
+              deletedAt: null,
+              status: ReminderStatus.SCHEDULED,
+            },
+            orderBy: { remindAt: 'asc' },
+            take: 1,
+            select: {
+              id: true,
+              remindAt: true,
+              status: true,
+            },
+          },
+        },
+      });
+    });
+
+    await this.auditService.log({
+      actorId: userId,
+      actorRole: 'USER',
+      action: 'REGISTRATION_RESUMED',
+      targetType: 'event_registration',
+      targetId: registrationId,
+      metadata: {
+        eventId: updated.eventId,
+      },
+    });
+
+    return {
+      id: updated.id,
+      eventId: updated.eventId,
+      status: updated.status,
+      registeredAt: updated.registeredAt,
+      canceledAt: updated.canceledAt,
+      cancelReason: updated.cancelReason,
+      event: updated.event,
+      isEventFinished: updated.event ? updated.event.endAt < now : false,
+      activeReminder: updated.reminders[0] ?? null,
+    };
+  }
+
   private async markNextWaitlistCandidateIfSeatAvailable(
     tx: Prisma.TransactionClient,
     eventId: string,

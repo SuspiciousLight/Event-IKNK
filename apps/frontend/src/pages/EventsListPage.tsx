@@ -44,7 +44,7 @@ export const EventsListPage = () => {
             aria-label="Поиск мероприятий"
           />
           <Text className="muted-text" style={{ marginTop: 8 }}>
-            Доступно мероприятий: {events.length}. В фильтре: {filteredEvents.length}.
+            Доступно мероприятий: {events.length}. Показано: {filteredEvents.length}.
           </Text>
         </div>
       </div>

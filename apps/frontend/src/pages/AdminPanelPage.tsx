@@ -16,13 +16,12 @@ import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh';
 import { useRegisterRefresh } from '../hooks/useRegisterRefresh';
 import { formatDateRange, formatStatus } from '../utils/format';
 
-type AdminTab = 'overview' | 'events' | 'forms' | 'templates' | 'registrations' | 'campaigns' | 'audit';
+type AdminTab = 'overview' | 'events' | 'forms' | 'registrations' | 'campaigns' | 'audit';
 
 const TABS: Array<{ id: AdminTab; label: string }> = [
   { id: 'overview', label: 'Обзор' },
   { id: 'events', label: 'Мероприятия' },
-  { id: 'forms', label: 'Формы' },
-  { id: 'templates', label: 'Шаблоны' },
+  { id: 'forms', label: 'Формы и шаблоны' },
   { id: 'registrations', label: 'Участники' },
   { id: 'campaigns', label: 'Рассылка' },
   { id: 'audit', label: 'Журнал' },
@@ -94,21 +93,16 @@ export const AdminPanelPage = () => {
     }
   };
 
-  const deleteSelectedEvent = async () => {
-    if (!selectedEvent) {
-      showError('Выберите мероприятие.');
-      return;
-    }
-
+  const deleteEvent = async (eventId: string, eventTitle: string) => {
     const confirmed = window.confirm(
-      `Удалить мероприятие «${selectedEvent.title}»? Оно скроется у студентов и в списке. Регистрации и история сохранятся.`,
+      `Удалить мероприятие «${eventTitle}»? Оно скроется у студентов и в списке. Регистрации и история сохранятся.`,
     );
     if (!confirmed) {
       return;
     }
 
     try {
-      await panel.deleteEvent(selectedEvent.id);
+      await panel.deleteEvent(eventId);
       await panel.loadLogs();
       showSuccess('Мероприятие удалено.');
     } catch (requestError: unknown) {
@@ -132,7 +126,8 @@ export const AdminPanelPage = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `event-${panel.selectedEventId}-registrations.xlsx`;
+      const safeTitle = (selectedEvent?.title ?? 'event').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+      link.download = `${safeTitle || 'event'}-registrations.xlsx`;
       link.click();
       URL.revokeObjectURL(url);
       showSuccess('Excel выгружен.');
@@ -157,11 +152,16 @@ export const AdminPanelPage = () => {
         eyebrow="Админ-панель"
         title="Управление мероприятиями"
         subtitle="Создавайте мероприятия и формы, смотрите участников, выгружайте Excel и запускайте VK-уведомления."
-        action={previousTab ? (
-          <Button mode="secondary" onClick={goBackInsideAdmin}>
-            Назад{previousTabLabel ? ` к «${previousTabLabel}»` : ''}
-          </Button>
-        ) : undefined}
+        action={(
+          <>
+            {previousTab && (
+              <Button mode="secondary" onClick={goBackInsideAdmin}>
+                Назад{previousTabLabel ? ` к «${previousTabLabel}»` : ''}
+              </Button>
+            )}
+            <Button mode="secondary" onClick={() => navigate('/events')}>Афиша</Button>
+          </>
+        )}
       />
 
       <StateBlock loading={panel.loading} error={panel.error}>
@@ -192,10 +192,14 @@ export const AdminPanelPage = () => {
               <Div className="grid-stack">
                 <div className="event-card-top">
                   <div>
-                    <Text className="eyebrow">Текущий контекст</Text>
+                    <Text className="eyebrow">Выбранное мероприятие</Text>
                     <Title level="3">{selectedEvent?.title ?? 'Мероприятие не выбрано'}</Title>
                   </div>
-                  {selectedEvent && <StatusBadge tone={selectedEvent.status === 'PUBLISHED' ? 'success' : 'warning'}>{formatStatus(selectedEvent.status ?? '')}</StatusBadge>}
+                  {selectedEvent && (
+                    <StatusBadge tone={selectedEvent.status === 'PUBLISHED' ? 'success' : selectedEvent.status === 'ARCHIVED' ? 'neutral' : 'warning'}>
+                      {formatStatus(selectedEvent.status ?? '')}
+                    </StatusBadge>
+                  )}
                 </div>
                 <Select
                   value={panel.selectedEventId}
@@ -216,13 +220,6 @@ export const AdminPanelPage = () => {
                   <StatusBadge tone="neutral">
                     Форма не добавлена — запись пойдёт по данным профиля. Добавьте форму во вкладке «Формы», если нужны доп. данные.
                   </StatusBadge>
-                )}
-                {selectedEvent && (
-                  <div className="form-action-row">
-                    <Button mode="secondary" appearance="negative" onClick={deleteSelectedEvent}>
-                      Удалить мероприятие
-                    </Button>
-                  </div>
                 )}
               </Div>
             </Card>
@@ -272,9 +269,54 @@ export const AdminPanelPage = () => {
                 </Card>
               </div>
             )}
-
             {activeTab === 'events' && (
               <div className="grid-stack">
+                <Card mode="shadow" className="admin-card admin-events-list">
+                  <Div className="grid-stack">
+                    <div>
+                      <Text className="eyebrow">Сначала выберите событие</Text>
+                      <Title level="3">Список мероприятий</Title>
+                      <Text className="muted-text">Откройте мероприятие из списка, чтобы дальше создать форму, посмотреть участников или запустить рассылку.</Text>
+                    </div>
+                    <div className="admin-table">
+                      {panel.events.length === 0 ? (
+                        <div className="admin-table-row">
+                          <Text weight="2">Мероприятий пока нет</Text>
+                          <Text className="muted-text">Создайте первое мероприятие в блоке ниже.</Text>
+                        </div>
+                      ) : (
+                        panel.events.map((event) => (
+                          <div
+                            className={`admin-event-row ${panel.selectedEventId === event.id ? 'admin-event-row-active' : ''}`}
+                            key={event.id}
+                          >
+                            <button className="admin-event-select" type="button" onClick={() => panel.setSelectedEventId(event.id)}>
+                              <div className="event-card-top">
+                                <Text weight="2">{event.title}</Text>
+                                <StatusBadge tone={event.status === 'PUBLISHED' ? 'success' : event.status === 'ARCHIVED' ? 'neutral' : 'warning'}>
+                                  {formatStatus(event.status ?? '')}
+                                </StatusBadge>
+                              </div>
+                              <Text className="muted-text">{formatDateRange(event.startAt, event.endAt)} · участников: {event._count?.registrations ?? 0}</Text>
+                              {(event._count?.forms ?? 0) === 0 && (
+                                <StatusBadge tone="neutral">Без формы — запись по данным профиля</StatusBadge>
+                              )}
+                            </button>
+                            <div className="form-action-row admin-event-row-actions">
+                              <Button mode="secondary" size="s" onClick={() => panel.setSelectedEventId(event.id)}>
+                                Выбрать
+                              </Button>
+                              <Button mode="secondary" appearance="negative" size="s" onClick={() => deleteEvent(event.id, event.title)}>
+                                Удалить
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Div>
+                </Card>
+
                 <Card mode="shadow" className="admin-card admin-events-create">
                   <Div className="grid-stack">
                     <div>
@@ -285,45 +327,20 @@ export const AdminPanelPage = () => {
                       onCreated={async (event) => {
                         panel.setSelectedEventId(event.id);
                         await panel.loadBaseData();
-                        showSuccess('Мероприятие создано.');
+                        showSuccess('Мероприятие создано. Теперь можно добавить форму.');
                       }}
                       onError={showError}
                     />
                   </Div>
                 </Card>
-                <Card mode="shadow" className="admin-card admin-events-list">
-                  <Div className="grid-stack">
-                    <Title level="3">Список мероприятий</Title>
-                    <div className="admin-table">
-                      {panel.events.map((event) => (
-                        <button
-                          className={`admin-event-row ${panel.selectedEventId === event.id ? 'admin-event-row-active' : ''}`}
-                          key={event.id}
-                          type="button"
-                          onClick={() => panel.setSelectedEventId(event.id)}
-                        >
-                          <div className="event-card-top">
-                            <Text weight="2">{event.title}</Text>
-                            <StatusBadge tone={event.status === 'PUBLISHED' ? 'success' : 'warning'}>{formatStatus(event.status ?? '')}</StatusBadge>
-                          </div>
-                          <Text className="muted-text">{formatDateRange(event.startAt, event.endAt)} · участников: {event._count?.registrations ?? 0}</Text>
-                          {(event._count?.forms ?? 0) === 0 && (
-                            <StatusBadge tone="neutral">Без формы — запись по данным профиля</StatusBadge>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </Div>
-                </Card>
+
                 {panel.templates.length > 0 && (
                   <Card mode="shadow" className="admin-card">
                     <Div className="grid-stack">
                       <div>
-                        <Text className="eyebrow">Дополнительно</Text>
-                        <Title level="3">Быстро создать мероприятие с шаблонной формой</Title>
-                        <Text className="muted-text">
-                          Это ускоренный сценарий: мероприятие и форма будут опубликованы сразу.
-                        </Text>
+                        <Text className="eyebrow">Быстрый сценарий</Text>
+                        <Title level="3">Создать мероприятие с готовой формой</Title>
+                        <Text className="muted-text">Выберите шаблон, и система сразу создаст мероприятие вместе с опубликованной формой.</Text>
                       </div>
                       <AdminEventFromTemplateForm
                         templates={panel.templates}
@@ -346,44 +363,26 @@ export const AdminPanelPage = () => {
                 <Card mode="shadow" className="admin-card">
                   <Div className="grid-stack">
                     <div>
-                      <Text className="eyebrow">Формы</Text>
-                      <Title level="3">Конструктор формы регистрации</Title>
+                      <Text className="eyebrow">Формы и шаблоны</Text>
+                      <Title level="3">Конструктор вопросов</Title>
                       <Text className="muted-text">
-                        Выберите мероприятие в верхнем блоке, добавьте вопросы в нужном порядке и сохраните форму. Если этот набор вопросов пригодится позже, сохраните его как шаблон.
+                        Форма привязывается к выбранному мероприятию. Шаблон — это заготовка вопросов, которую можно переиспользовать позже.
                       </Text>
                     </div>
                   </Div>
                 </Card>
-                <AdminFormBuilder
-                  selectedEventId={panel.selectedEventId}
-                  templates={panel.templates}
-                  mode="form"
-                  onDone={async () => {
-                    await panel.loadBaseData();
-                    await panel.loadLogs();
-                    showSuccess('Форма или шаблон сохранены.');
-                  }}
-                  onError={showError}
-                />
-              </div>
-            )}
 
-            {activeTab === 'templates' && (
-              <div className="grid-stack">
                 <Card mode="shadow" className="admin-card">
                   <Div className="grid-stack">
                     <div>
-                      <Text className="eyebrow">Шаблоны</Text>
-                      <Title level="3">Сохранённые заготовки</Title>
-                      <Text className="muted-text">
-                        Шаблон — это набор вопросов. Он сам ничего не публикует. Чтобы использовать его, откройте вкладку «Формы» и выберите шаблон.
-                      </Text>
+                      <Text className="eyebrow">Сохранённые шаблоны</Text>
+                      <Title level="3">Заготовки вопросов</Title>
                     </div>
                     <div className="admin-table">
                       {panel.templates.length === 0 ? (
                         <div className="admin-table-row">
                           <Text weight="2">Шаблонов пока нет</Text>
-                          <Text className="muted-text">Создайте первый шаблон ниже, чтобы переиспользовать набор вопросов.</Text>
+                          <Text className="muted-text">Создайте шаблон ниже, если хотите переиспользовать набор вопросов.</Text>
                         </div>
                       ) : (
                         panel.templates.map((template) => (
@@ -396,13 +395,16 @@ export const AdminPanelPage = () => {
                     </div>
                   </Div>
                 </Card>
+
                 <AdminFormBuilder
+                  key={`forms-${panel.selectedEventId}-${panel.templates.length}`}
+                  selectedEventId={panel.selectedEventId}
                   templates={panel.templates}
-                  mode="template"
+                  mode="both"
                   onDone={async () => {
                     await panel.loadBaseData();
                     await panel.loadLogs();
-                    showSuccess('Шаблон сохранён.');
+                    showSuccess('Форма или шаблон сохранены.');
                   }}
                   onError={showError}
                 />

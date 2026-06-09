@@ -19,6 +19,11 @@ export const registrationsApi = {
       body: { reason },
     }),
 
+  resume: (registrationId: string) =>
+    apiRequest<RegistrationListItemDto>(`/registrations/${registrationId}/resume`, {
+      method: 'PATCH',
+    }),
+
   listMy: (params?: {
     page?: number;
     pageSize?: number;

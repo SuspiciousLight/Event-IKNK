@@ -14,7 +14,7 @@ export const ConsentBlock = ({ accepted, onToggle, consentVersion, consentText }
   return (
     <div className="consent-box">
       <div>
-        <Title level="3">Согласие на обработку персональных данных</Title>
+        <Title level="3">Согласие на обработку данных для записи</Title>
         <Text className="muted-text">
           Мы используем данные только для регистрации на мероприятие, связи по организационным вопросам и напоминаний.
         </Text>

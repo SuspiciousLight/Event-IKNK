@@ -1,4 +1,4 @@
-﻿import { FormEvent, useCallback } from 'react';
+import { FormEvent, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Div, FormItem, Group, Input, Text, Title } from '@vkontakte/vkui';
 import { useAdminAuth } from '../app/providers/AdminAuthProvider';
@@ -14,19 +14,12 @@ const getInitials = (firstName?: string, lastName?: string) => {
   return `${last}${first}`.trim().toUpperCase() || 'ST';
 };
 
-const openDocument = (url?: string) => {
-  if (!url) {
-    return;
-  }
-
-  window.open(new URL(url, window.location.origin).toString(), '_blank', 'noopener,noreferrer');
-};
-
 export const ProfileAutofillPage = () => {
   const navigate = useNavigate();
   const { snackbar, showError, showSuccess } = useAppSnackbar();
   const { isAdmin } = useAdminAuth();
   const profile = useProfileAutofill();
+  const [openedDocument, setOpenedDocument] = useState<'privacy' | 'agreement' | null>(null);
   const refreshProfile = useCallback(async () => {
     await profile.reload();
   }, [profile.reload]);
@@ -65,7 +58,6 @@ export const ProfileAutofillPage = () => {
         eyebrow="Личный кабинет"
         title="Профиль автозаполнения"
         subtitle="VK ID определяется автоматически. В профиле студент вводит только фамилию и имя."
-        action={<Button mode="secondary" onClick={() => navigate('/consent')}>Согласие на ПД</Button>}
       />
 
       <StateBlock loading={profile.loading} error={profile.error}>
@@ -119,13 +111,31 @@ export const ProfileAutofillPage = () => {
                       {profile.disclaimer?.text ?? 'Данные используются только для регистрации на мероприятия и организационных уведомлений.'}
                     </Text>
                     <div className="form-action-row">
-                      <Button type="button" mode="secondary" onClick={() => openDocument(profile.disclaimer?.privacyPolicyUrl)}>
+                      <Button
+                        type="button"
+                        mode="secondary"
+                        onClick={() => setOpenedDocument((prev) => (prev === 'privacy' ? null : 'privacy'))}
+                      >
                         Политика конфиденциальности
                       </Button>
-                      <Button type="button" mode="secondary" onClick={() => openDocument(profile.disclaimer?.userAgreementUrl)}>
+                      <Button
+                        type="button"
+                        mode="secondary"
+                        onClick={() => setOpenedDocument((prev) => (prev === 'agreement' ? null : 'agreement'))}
+                      >
                         Пользовательское соглашение
                       </Button>
                     </div>
+                    {openedDocument === 'privacy' && (
+                      <Text className="consent-text">
+                        {profile.disclaimer?.privacyPolicyText ?? 'Текст политики временно недоступен.'}
+                      </Text>
+                    )}
+                    {openedDocument === 'agreement' && (
+                      <Text className="consent-text">
+                        {profile.disclaimer?.userAgreementText ?? 'Текст пользовательского соглашения временно недоступен.'}
+                      </Text>
+                    )}
                     {profile.requiresDisclaimer ? (
                       <div className="form-action-row">
                         <Button
@@ -171,22 +181,14 @@ export const ProfileAutofillPage = () => {
             </Div>
           </Card>
 
-          {profile.hasProfile && (
-            <Card mode="shadow" className="profile-card danger-zone">
-              <Div className="grid-stack">
-                <div>
-                  <Text className="eyebrow">Управление данными</Text>
-                  <Title level="3">Деактивация профиля</Title>
-                  <Text className="muted-text">
-                    Если профиль больше не нужен, можно деактивировать его. Активные записи, напоминания и лист ожидания будут отменены, а ФИ будет удалено из профиля.
-                  </Text>
-                </div>
-                <Button mode="secondary" appearance="negative" loading={profile.saving} onClick={deactivateProfile}>
-                  Деактивировать профиль
-                </Button>
-              </Div>
-            </Card>
-          )}
+          <div className="profile-footer-actions">
+            <Text className="muted-text">Поддержка: <a href="mailto:i@hhero.ru">i@hhero.ru</a></Text>
+            {profile.hasProfile && (
+              <Button mode="tertiary" appearance="negative" size="s" loading={profile.saving} onClick={deactivateProfile}>
+                Деактивировать профиль
+              </Button>
+            )}
+          </div>
 
           <div className="admin-entry">
             <button

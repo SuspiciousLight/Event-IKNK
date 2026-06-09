@@ -1,0 +1,22 @@
+phantom:
+  address: 127.0.0.1:3000
+  ammo_type: uri
+  ammofile: ammo.uri
+  header_http: '1.1'
+  load_profile:
+    load_type: rps
+    schedule: line(1, 20, 2m) const(20, 3m) line(20, 50, 3m) const(50, 2m)
+  timeout: 5s
+
+autostop:
+  autostop:
+    - http(5xx,5%,10s)
+    - http(4xx,25%,10s)
+    - net(xx,1,30s)
+    - time(1500ms,30s)
+
+console:
+  short_only: true
+
+telegraf:
+  config: none

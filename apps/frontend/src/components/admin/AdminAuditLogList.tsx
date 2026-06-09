@@ -12,9 +12,9 @@ type AdminAuditLogListProps = {
 export const AdminAuditLogList = ({ logs, loading, error }: AdminAuditLogListProps) => (
   <Div className="grid-stack">
     <div>
-      <Text className="eyebrow">Audit log</Text>
+      <Text className="eyebrow">Журнал</Text>
       <Title level="3">Журнал административных действий</Title>
-      <Text className="muted-text">В журнал не пишутся сырые ответы формы, ФИ или VK ID целиком.</Text>
+      <Text className="muted-text">Здесь отображаются последние действия администратора: создание событий, экспорт и рассылки.</Text>
     </div>
     <AsyncBoundary
       loading={loading}

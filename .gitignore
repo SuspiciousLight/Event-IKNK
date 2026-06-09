@@ -9,6 +9,10 @@ dist/
 apps/frontend/dist/
 apps/backend/dist/
 coverage/
+load-testing/yandex-tank/*.stpd
+load-testing/yandex-tank/phout*.txt
+load-testing/yandex-tank/tank.log
+load-testing/yandex-tank/yandex-tank-*.log
 
 *.log
 npm-debug.log*

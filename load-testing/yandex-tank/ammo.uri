@@ -1,0 +1,10 @@
+[Connection: close]
+[Accept: application/json]
+[User-Agent: YandexTank-Diplom/1.0]
+[x-vk-user-id: 100001]
+/api/v1/health health
+/api/v1/users/profile-disclaimer profile_disclaimer
+/api/v1/events?page=1&pageSize=10 events_list
+/api/v1/events/22222222-2222-4222-8222-222222222222 event_career
+/api/v1/events/44444444-4444-4444-8444-444444444444 event_resume
+/api/v1/registrations/me?page=1&pageSize=10 my_registrations

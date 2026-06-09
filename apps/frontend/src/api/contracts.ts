@@ -114,6 +114,8 @@ export type ProfileDisclaimerDto = {
   text: string;
   privacyPolicyUrl?: string;
   userAgreementUrl?: string;
+  privacyPolicyText?: string;
+  userAgreementText?: string;
 };
 
 export type ConsentDocumentDto = {

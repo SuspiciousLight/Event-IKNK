@@ -116,7 +116,10 @@ export class AdminController {
     const result = await this.adminService.exportEventRegistrationsToExcel(user, eventId, query);
 
     response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    response.setHeader('Content-Disposition', `attachment; filename="${result.fileName}"`);
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="registrations.xlsx"; filename*=UTF-8''${encodeURIComponent(result.fileName)}`,
+    );
 
     return new StreamableFile(result.buffer);
   }

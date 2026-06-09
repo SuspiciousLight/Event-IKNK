@@ -63,11 +63,6 @@ export const EventCard = ({ event, variant = 'compact', onOpen, onRegister, onOp
         </div>
 
         <div className="event-card-actions">
-          {onOpen && (
-            <Button mode="secondary" size="m" onClick={() => onOpen(event.id)}>
-              Подробнее
-            </Button>
-          )}
           {isRegistered && onOpenMyRegistration ? (
             <Button mode="secondary" size="m" onClick={onOpenMyRegistration}>
               Вы записаны →

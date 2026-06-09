@@ -94,7 +94,7 @@ export const useAdminPanel = () => {
         search: registrationsSearch,
         status: includeCanceled ? 'CANCELED' : 'ACTIVE',
         sortBy: 'registeredAt',
-        sortOrder: 'desc',
+        sortOrder: 'asc',
       });
       setRegistrations(response.items);
       setRegistrationsMeta(response.meta);
