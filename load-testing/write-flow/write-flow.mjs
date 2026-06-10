@@ -29,6 +29,7 @@ const vkUserStart = toPositiveInt(args.vkUserStart ?? process.env.LOADTEST_WRITE
 const maxRegistrations = toPositiveInt(args.maxRegistrations ?? process.env.LOADTEST_WRITE_MAX_REGISTRATIONS, 1800);
 const cleanupRps = toPositiveInt(args.cleanupRps ?? process.env.LOADTEST_WRITE_CLEANUP_RPS, 5);
 const skipCleanup = args.skipCleanup === true || process.env.LOADTEST_WRITE_SKIP_CLEANUP === 'true';
+const simulateClientIps = args.simulateClientIps === true || process.env.LOADTEST_WRITE_SIMULATE_CLIENT_IPS === 'true';
 const reportEveryMs = parseDuration(args.reportEvery ?? '10s');
 const confirmed = args.confirmWriteTest === true || process.env.LOADTEST_WRITE_CONFIRM === 'true';
 
@@ -104,6 +105,7 @@ console.log(`Event: ${eventCard.event.title} (${eventId})`);
 console.log(`Duration: ${formatDuration(durationMs)}, drain: ${formatDuration(drainMs)}`);
 console.log(`Synthetic VK users: ${users}, max registrations: ${maxRegistrations}`);
 console.log('Rates: registrations 1-3 RPS, reminders 0.5-1 RPS, cancels 0.5-1 RPS');
+console.log(`Simulated client IPs: ${simulateClientIps ? 'enabled' : 'disabled'}`);
 console.log('Press Ctrl+C to stop early.\n');
 
 let stopping = false;
@@ -537,9 +539,15 @@ function reminderTimeBefore(eventStartAt) {
 }
 
 function authHeadersFor(vkUserId) {
-  return {
+  const headers = {
     'X-VK-Launch-Params': createLaunchParams(vkUserId),
   };
+
+  if (simulateClientIps) {
+    headers['X-Forwarded-For'] = syntheticIpFor(vkUserId);
+  }
+
+  return headers;
 }
 
 function createLaunchParams(vkUserId) {
@@ -570,6 +578,13 @@ function fullNameFor(seed) {
   const firstNames = ['Иван', 'Петр', 'Алексей', 'Максим', 'Сергей', 'Андрей', 'Никита', 'Даниил'];
   const lastNames = ['Иванов', 'Петров', 'Сидоров', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев', 'Соколов'];
   return `${lastNames[seed % lastNames.length]} ${firstNames[seed % firstNames.length]}`;
+}
+
+function syntheticIpFor(vkUserId) {
+  const value = Number(vkUserId);
+  const third = Math.floor(value / 250) % 250;
+  const fourth = value % 250;
+  return `10.250.${third}.${fourth}`;
 }
 
 function printProgress(elapsedMs) {
@@ -712,7 +727,7 @@ function parseArgs(rawArgs) {
     const rawKey = current.slice(2);
     const [key, inlineValue] = rawKey.split('=');
     const normalizedKey = toCamelCase(key);
-    if (key === 'confirm-write-test' || key === 'skip-cleanup' || key === 'help') {
+    if (key === 'confirm-write-test' || key === 'skip-cleanup' || key === 'simulate-client-ips' || key === 'help') {
       result[normalizedKey] = inlineValue === undefined ? true : inlineValue !== 'false';
       continue;
     }
@@ -743,7 +758,7 @@ Required:
   --event-id <uuid> OR --find-event-title "Нагрузочный тест"
 
 Examples:
-  node load-testing/write-flow/write-flow.mjs --target https://event-iknk.ru --find-event-title "Нагрузочный тест" --duration 15m --users 2000 --confirm-write-test
+  node load-testing/write-flow/write-flow.mjs --target https://event-iknk.ru --find-event-title "Нагрузочный тест" --duration 15m --users 2000 --simulate-client-ips --confirm-write-test
   node load-testing/write-flow/write-flow.mjs --target https://event-iknk.ru --event-id <uuid> --duration 2m --max-registrations 60 --confirm-write-test
 
 Environment:

@@ -49,6 +49,7 @@ node load-testing/write-flow/write-flow.mjs \
   --drain 2m \
   --users 2000 \
   --max-registrations 1800 \
+  --simulate-client-ips \
   --confirm-write-test
 ```
 
@@ -62,6 +63,7 @@ node load-testing/write-flow/write-flow.mjs \
   --drain 1m \
   --users 150 \
   --max-registrations 120 \
+  --simulate-client-ips \
   --confirm-write-test
 ```
 
@@ -90,6 +92,16 @@ node load-testing/write-flow/write-flow.mjs \
 ```
 
 To skip cleanup, use `--skip-cleanup`, but do this only if you plan to clean test data manually.
+
+## About `429 RATE_LIMITED`
+
+Backend rate limiting is intentionally enabled for profile, registration, reminder and cancel endpoints.
+When the test is launched from one VPS without `--simulate-client-ips`, all virtual users look like one
+client IP and the backend correctly returns `429`.
+
+Use `--simulate-client-ips` for the controlled performance test. It adds a synthetic `X-Forwarded-For`
+header per virtual user so the test better reflects many real students instead of one bot from one IP.
+Do not use this mode to test security bypasses; use it only for the dedicated load-test event.
 
 ## Diploma wording
 
