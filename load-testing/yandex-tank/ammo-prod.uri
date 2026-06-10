@@ -1,0 +1,5 @@
+[Connection: close]
+[Accept: text/html,application/json]
+[User-Agent: YandexTank-Diplom-Prod/1.0]
+/
+/api/v1/health health

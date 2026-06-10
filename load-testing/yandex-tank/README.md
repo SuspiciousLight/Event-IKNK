@@ -48,6 +48,47 @@ Main profile, gradual 1 to 50 RPS for 10 minutes:
 corepack pnpm run loadtest:tank
 ```
 
+Production-safe 10 minute test for `https://event-iknk.ru`:
+
+```powershell
+corepack pnpm run loadtest:tank:prod
+```
+
+Production 15 minute realistic wave test for `https://event-iknk.ru`.
+This profile is suitable for diploma demonstration as an equivalent of about
+200-300 active users when one user performs an action every 8-10 seconds:
+
+```powershell
+corepack pnpm run loadtest:tank:prod:15m
+```
+
+On the Linux server run it through Docker:
+
+```bash
+cd /var/www/Event-IKNK/load-testing/yandex-tank
+docker run --rm --net host -v "$(pwd)":/var/loadtest -w /var/loadtest -it yandex/yandex-tank -c load-prod-15min-200-300-users.yaml
+```
+
+The production profile uses only:
+
+- `GET /`
+- `GET /api/v1/health`
+- `GET /privacy-policy.html`
+- `GET /user-agreement.html`
+
+It does not call VK-protected user endpoints, so 400/401 responses should not dominate the report.
+
+Important: Yandex Tank primarily controls RPS or instances. For a production VPS, use the RPS profile above.
+Do not run a raw `instances=300` profile against the public server unless you intentionally want a stress test:
+with very fast responses, 300 instances can generate much more traffic than 300 real users.
+
+On the Linux server you can run the same config directly:
+
+```bash
+cd /var/www/Event-IKNK/load-testing/yandex-tank
+docker run --rm --net host -v "$(pwd)":/var/loadtest -w /var/loadtest -it yandex/yandex-tank -c load-prod-10min.yaml
+```
+
 Native Yandex Tank example:
 
 ```powershell

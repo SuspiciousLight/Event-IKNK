@@ -1,0 +1,23 @@
+phantom:
+  address: event-iknk.ru
+  port: 443
+  ssl: true
+  ammo_type: uri
+  ammofile: ammo-prod.uri
+  header_http: '1.1'
+  load_profile:
+    load_type: rps
+    schedule: line(1, 10, 2m) const(10, 3m) line(10, 20, 2m) const(20, 3m)
+  timeout: 5s
+
+autostop:
+  autostop:
+    - http(5xx,5%,20s)
+    - net(xx,1,30s)
+    - time(1500ms,30s)
+
+console:
+  short_only: true
+
+telegraf:
+  config: none

@@ -1,0 +1,9 @@
+[Connection: close]
+[Accept: text/html,application/json]
+[User-Agent: YandexTank-Diplom-15m/1.0]
+/
+/
+/
+/api/v1/health health
+/privacy-policy.html privacy_policy
+/user-agreement.html user_agreement
