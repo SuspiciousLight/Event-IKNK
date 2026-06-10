@@ -1,6 +1,6 @@
 phantom:
   address: event-iknk.ru
-  port: 443
+  port: "443"
   ssl: true
   ammo_type: uri
   ammofile: ammo-prod.uri
