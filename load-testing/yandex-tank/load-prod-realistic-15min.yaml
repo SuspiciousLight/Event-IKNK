@@ -1,0 +1,26 @@
+phantom:
+  address: event-iknk.ru
+  port: "443"
+  ssl: true
+  ammo_type: phantom
+  ammofile: ammo-prod-realistic.generated.phantom
+  header_http: '1.1'
+  load_profile:
+    load_type: rps
+    # 15 minutes of realistic user traffic waves.
+    # 20-35 RPS roughly equals 200-300 active users when one user
+    # performs one action every 8-10 seconds.
+    schedule: line(5, 20, 2m) const(20, 2m) line(20, 8, 1m) const(8, 1m) line(8, 30, 3m) const(30, 2m) line(30, 12, 1m) line(12, 35, 1m) const(35, 1m) line(35, 5, 1m)
+  timeout: 5s
+
+autostop:
+  autostop:
+    - http(5xx,5%,20s)
+    - net(xx,1,30s)
+    - time(1500ms,30s)
+
+console:
+  short_only: true
+
+telegraf:
+  config: none

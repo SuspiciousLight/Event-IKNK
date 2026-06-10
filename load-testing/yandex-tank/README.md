@@ -82,6 +82,40 @@ Important: Yandex Tank primarily controls RPS or instances. For a production VPS
 Do not run a raw `instances=300` profile against the public server unless you intentionally want a stress test:
 with very fast responses, 300 instances can generate much more traffic than 300 real users.
 
+## Realistic VK Mini App flow
+
+The safe production profile above checks public availability. To simulate a more realistic
+student flow, generate request-style ammo with signed VK launch params and then run the
+realistic profile:
+
+```bash
+cd /var/www/Event-IKNK/load-testing/yandex-tank
+node generate-realistic-ammo.mjs --target https://event-iknk.ru --users 250 --requests 5000
+docker run --rm --net host -v "$(pwd)":/var/loadtest -w /var/loadtest -it yandex/yandex-tank -c load-prod-realistic-15min.yaml
+```
+
+This profile sends a weighted mix of:
+
+- `GET /` and frontend static assets from the real `index.html`.
+- `GET /api/v1/health`.
+- `GET /api/v1/events?page=1&pageSize=20&sortOrder=asc`.
+- `GET /api/v1/events/:eventId`.
+- `GET /api/v1/events/:eventId/waitlist`.
+- `GET /api/v1/registrations/me?page=1&pageSize=10&scope=active`.
+- `GET /api/v1/registrations/me?page=1&pageSize=10&scope=archive`.
+- `GET /api/v1/consents/current`.
+- `GET /api/v1/consents/me`.
+- `GET /api/v1/users/profile-disclaimer`.
+- `GET /privacy-policy.html`.
+- `GET /user-agreement.html`.
+
+The generator reads `VK_APP_SECRET` from the root `.env` and writes only a local
+`ammo-prod-realistic.generated.phantom` file. Do not commit generated ammo files.
+
+Note: protected VK endpoints upsert users by `vk_user_id`, so the realistic profile can create
+synthetic load-test `User` rows. This is expected for a closer production simulation.
+If you do not want many synthetic users, run with `--users 1` or use a staging database.
+
 On the Linux server you can run the same config directly:
 
 ```bash
