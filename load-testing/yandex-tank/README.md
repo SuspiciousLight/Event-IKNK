@@ -94,6 +94,36 @@ node generate-realistic-ammo.mjs --target https://event-iknk.ru --users 250 --re
 docker run --rm --net host -v "$(pwd)":/var/loadtest -w /var/loadtest -it yandex/yandex-tank -c load-prod-realistic-15min.yaml
 ```
 
+For a clearer live console dashboard, use the UI config:
+
+```bash
+clear
+docker run --rm --net host -v "$(pwd)":/var/loadtest -w /var/loadtest -it yandex/yandex-tank -c load-prod-realistic-15min-ui.yaml
+```
+
+Run it in a wide terminal window. Recommended size: at least 150 columns x 40 rows.
+If the dashboard is broken, zoom out the terminal or use the non-UI config.
+
+What to show during the demo:
+
+- `RPS` - current request rate.
+- `HTTP codes` - successful/failed HTTP responses.
+- `Net codes` - network errors; should stay `0 Success`.
+- `Percentiles` - response time distribution, especially `95%` and `99%`.
+- `OVERALL` - final aggregate result.
+
+After the run, reports are stored under:
+
+```bash
+ls -td tank-artifacts/* | head -1
+```
+
+Open the final text report:
+
+```bash
+cat "$(ls -td tank-artifacts/* | head -1)/offline_report.txt"
+```
+
 This profile sends a weighted mix of:
 
 - `GET /` and frontend static assets from the real `index.html`.
