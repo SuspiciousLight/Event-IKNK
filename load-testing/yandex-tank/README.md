@@ -112,17 +112,21 @@ What to show during the demo:
 - `Percentiles` - response time distribution, especially `95%` and `99%`.
 - `OVERALL` - final aggregate result.
 
-After the run, reports are stored under:
+After the run, Yandex Tank artifacts are stored under:
 
 ```bash
 ls -td tank-artifacts/* | head -1
 ```
 
-Open the final text report:
+Useful files:
 
 ```bash
-cat "$(ls -td tank-artifacts/* | head -1)/offline_report.txt"
+ls -la "$(ls -td tank-artifacts/* | head -1)"
 ```
+
+The Docker image used by `yandex/yandex-tank` may not include a working
+`OfflineReport` schema, so the UI config intentionally uses the live console
+and JSON/test-data logs instead of `offline_report`.
 
 This profile sends a weighted mix of:
 

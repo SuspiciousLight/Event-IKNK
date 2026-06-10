@@ -29,12 +29,6 @@ console:
   sizes_max_spark: 70
   times_max_spark: 70
 
-offline_report:
-  enabled: true
-  print_report: true
-  offline_text_report: offline_report.txt
-  offline_json_report: offline_report.json
-
 json_report:
   enabled: true
   test_data_log: test_data.log
