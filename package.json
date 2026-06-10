@@ -23,6 +23,7 @@
     "loadtest:tank:prod": "powershell -ExecutionPolicy Bypass -File load-testing/yandex-tank/run.ps1 -Config load-prod-10min.yaml",
     "loadtest:tank:prod:15m": "powershell -ExecutionPolicy Bypass -File load-testing/yandex-tank/run.ps1 -Config load-prod-15min-200-300-users.yaml",
     "loadtest:ammo:realistic": "node load-testing/yandex-tank/generate-realistic-ammo.mjs",
+    "loadtest:write-flow": "node load-testing/write-flow/write-flow.mjs",
     "loadtest:tank:smoke": "powershell -ExecutionPolicy Bypass -File load-testing/yandex-tank/run.ps1 -Config load-smoke.yaml",
     "tunnel:pinggy": "ssh -p 443 -R 0:localhost:4173 a.pinggy.io",
     "tunnel:pinggy:dev": "ssh -p 443 -R 0:localhost:5173 a.pinggy.io"
