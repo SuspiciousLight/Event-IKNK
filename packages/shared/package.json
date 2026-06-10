@@ -5,9 +5,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "echo \"No tests in shared package\""
+    "test": "vitest run --passWithNoTests=false"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8"
   }
 }
